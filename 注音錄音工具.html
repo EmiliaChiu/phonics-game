@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注音錄音工具 🎙️</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(180deg, #FFE3F0 0%, #E0F4FF 100%);
+    min-height: 100vh;
+  }
+  .header {
+    max-width: 900px; margin: 0 auto 20px;
+    background: white; padding: 20px 25px; border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  h1 { margin: 0 0 8px; color: #E91E63; }
+  .subtitle { color: #666; margin: 0 0 14px; }
+  .steps {
+    background: #FFF8E1; padding: 12px 18px; border-radius: 12px;
+    border-left: 4px solid #FFC107; margin-top: 10px;
+  }
+  .steps ol { margin: 4px 0; padding-left: 22px; }
+  .steps li { margin: 4px 0; line-height: 1.6; }
+  .controls {
+    max-width: 900px; margin: 0 auto 20px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    background: white; padding: 14px; border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    align-items: center;
+  }
+  .btn {
+    padding: 10px 18px; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: bold; cursor: pointer; color: white;
+    font-family: inherit;
+  }
+  .btn-primary { background: #4CAF50; }
+  .btn-warn { background: #FF9800; }
+  .btn-danger { background: #F44336; }
+  .btn-info { background: #2196F3; }
+  .btn:active { transform: translateY(1px); }
+  .progress {
+    flex: 1; min-width: 180px;
+    color: #555; font-weight: bold;
+  }
+
+  .grid {
+    max-width: 900px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+  .card {
+    background: white; border-radius: 14px; padding: 12px 8px;
+    text-align: center; cursor: pointer; user-select: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    border: 3px solid transparent;
+    transition: transform 0.1s, border-color 0.2s;
+    position: relative;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card .symbol {
+    font-size: 44px; font-weight: bold; color: #333; line-height: 1;
+  }
+  .card .label {
+    margin-top: 4px; font-size: 13px; color: #888;
+  }
+  .card .status {
+    margin-top: 6px; font-size: 12px; min-height: 16px;
+  }
+  .card.recording {
+    border-color: #F44336;
+    animation: pulseRec 1s infinite;
+  }
+  .card.has-recording {
+    border-color: #4CAF50;
+    background: #F1F8E9;
+  }
+  .card.has-recording .status { color: #2E7D32; font-weight: bold; }
+  @keyframes pulseRec {
+    0%,100% { box-shadow: 0 0 0 0 rgba(244,67,54,0.7); }
+    50% { box-shadow: 0 0 0 12px rgba(244,67,54,0); }
+  }
+  .card .play-btn {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(255,255,255,0.9); border: 1px solid #ccc;
+    border-radius: 50%; width: 24px; height: 24px;
+    font-size: 11px; cursor: pointer; padding: 0;
+    display: none;
+  }
+  .card.has-recording .play-btn { display: block; }
+
+  .help {
+    max-width: 900px; margin: 20px auto;
+    background: white; padding: 18px 22px; border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    color: #555; line-height: 1.7;
+  }
+  .help h3 { color: #E91E63; margin-top: 0; }
+  code {
+    background: #F5F5F5; padding: 2px 6px; border-radius: 4px;
+    font-family: 'Consolas', monospace; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎙️ 注音錄音工具</h1>
+  <p class="subtitle">為「注音打地鼠」遊戲錄製 37 個注音的真人發音</p>
+  <div class="steps">
+    <strong>使用步驟：</strong>
+    <ol>
+      <li>第一次點任一張卡片時，瀏覽器會請求麥克風權限，請允許 ✅</li>
+      <li>點卡片開始錄音 → 念出該注音 → 再點一次卡片停止</li>
+      <li>錄完後可點 ▶️ 試聽。錄不滿意就再點一次卡片重錄</li>
+      <li>全部 37 個錄完後，點上方「💾 下載全部」</li>
+      <li>把 37 個下載的檔案搬到 <code>桌面\Claude\audio\</code> 資料夾</li>
+      <li>重開「注音打地鼠」遊戲，遊戲會自動使用你的錄音 🎉</li>
+    </ol>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" id="downloadAllBtn" disabled>💾 下載全部</button>
+  <button class="btn btn-warn" id="downloadMissingBtn" disabled>📦 只下載已錄好的</button>
+  <button class="btn btn-info" id="playAllBtn" disabled>🎵 試聽全部</button>
+  <button class="btn btn-danger" id="clearAllBtn">🗑️ 清空全部</button>
+  <div class="progress" id="progress">已錄製 0/37</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="help">
+  <h3>📌 提示</h3>
+  <p><strong>檔案格式：</strong>瀏覽器錄音是 webm 格式（檔案小、音質好）。遊戲已支援自動讀取 webm/mp3/ogg/wav。</p>
+  <p><strong>錄音建議：</strong>找安靜的環境、嘴巴離麥克風 10-20 公分、念清楚一點即可。每個音念 1 秒左右最自然。</p>
+  <p><strong>放置位置：</strong>下載的檔案請放到 <code>桌面\Claude\audio\</code>，檔名不要改（例如 <code>ㄅ.webm</code>）。</p>
+  <p><strong>瀏覽器記憶：</strong>錄音會暫存在瀏覽器的 IndexedDB 中，下次打開這個工具還在。但建議錄完馬上下載備份。</p>
+</div>
+
+<script>
+'use strict';
+
+const BOPOMOFO = [
+  // 聲母 21
+  ['ㄅ','玻'],['ㄆ','坡'],['ㄇ','摸'],['ㄈ','佛'],
+  ['ㄉ','得'],['ㄊ','特'],['ㄋ','訥'],['ㄌ','勒'],
+  ['ㄍ','哥'],['ㄎ','科'],['ㄏ','喝'],
+  ['ㄐ','基'],['ㄑ','欺'],['ㄒ','希'],
+  ['ㄓ','知'],['ㄔ','吃'],['ㄕ','詩'],['ㄖ','日'],
+  ['ㄗ','資'],['ㄘ','雌'],['ㄙ','思'],
+  // 介母 3
+  ['ㄧ','衣'],['ㄨ','烏'],['ㄩ','迂'],
+  // 韻母 13
+  ['ㄚ','啊'],['ㄛ','喔'],['ㄜ','鵝'],['ㄝ','耶'],
+  ['ㄞ','哀'],['ㄟ','誒'],['ㄠ','凹'],['ㄡ','歐'],
+  ['ㄢ','安'],['ㄣ','恩'],['ㄤ','骯'],['ㄥ','鞥'],['ㄦ','兒']
+];
+
+// IndexedDB - 暫存錄音資料
+const DB_NAME = 'bopomofoRecordings';
+const STORE = 'audio';
+let db = null;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+async function dbPut(key, blob) {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORE], 'readwrite');
+    tx.objectStore(STORE).put(blob, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+async function dbGet(key) {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORE], 'readonly');
+    const req = tx.objectStore(STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+async function dbDelete(key) {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORE], 'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+async function dbClear() {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORE], 'readwrite');
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+  });
+}
+
+// 錄音狀態
+let stream = null;
+let mediaRecorder = null;
+let recordingKey = null;
+let chunks = [];
+const recorded = new Map(); // symbol -> Blob
+
+async function ensureMic() {
+  if (stream) return stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation: true, noiseSuppression: true, autoGainControl: true
+    }});
+    return stream;
+  } catch (e) {
+    alert('無法取得麥克風權限：' + e.message);
+    return null;
+  }
+}
+
+function pickMimeType() {
+  const cands = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+    'audio/mp4'
+  ];
+  for (const c of cands) {
+    if (MediaRecorder.isTypeSupported(c)) return c;
+  }
+  return '';
+}
+
+async function startRecord(symbol) {
+  if (!await ensureMic()) return;
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecord();
+    return;
+  }
+  recordingKey = symbol;
+  chunks = [];
+  const mime = pickMimeType();
+  mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    recorded.set(recordingKey, blob);
+    await dbPut(recordingKey, blob);
+    updateCard(recordingKey);
+    updateProgress();
+    recordingKey = null;
+    mediaRecorder = null;
+  };
+  mediaRecorder.start();
+  document.querySelector(`[data-sym="${symbol}"]`).classList.add('recording');
+}
+
+function stopRecord() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    document.querySelector(`[data-sym="${recordingKey}"]`).classList.remove('recording');
+    mediaRecorder.stop();
+  }
+}
+
+function updateCard(symbol) {
+  const card = document.querySelector(`[data-sym="${symbol}"]`);
+  if (!card) return;
+  if (recorded.has(symbol)) {
+    card.classList.add('has-recording');
+    card.querySelector('.status').textContent = '✓ 已錄製';
+  } else {
+    card.classList.remove('has-recording');
+    card.querySelector('.status').textContent = '';
+  }
+}
+
+function updateProgress() {
+  const n = recorded.size;
+  document.getElementById('progress').textContent = `已錄製 ${n}/37`;
+  document.getElementById('downloadAllBtn').disabled = n < 37;
+  document.getElementById('downloadMissingBtn').disabled = n === 0;
+  document.getElementById('playAllBtn').disabled = n === 0;
+}
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  for (const [sym, char] of BOPOMOFO) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.sym = sym;
+    card.innerHTML = `
+      <button class="play-btn" title="試聽">▶️</button>
+      <div class="symbol">${sym}</div>
+      <div class="label">${char}</div>
+      <div class="status"></div>
+    `;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.play-btn')) return;
+      if (recordingKey === sym) stopRecord();
+      else if (recordingKey) { stopRecord(); setTimeout(() => startRecord(sym), 100); }
+      else startRecord(sym);
+    });
+    card.querySelector('.play-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const blob = recorded.get(sym);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
+      audio.onended = () => URL.revokeObjectURL(url);
+    });
+    grid.appendChild(card);
+  }
+}
+
+function blobExt(blob) {
+  const t = blob.type || '';
+  if (t.includes('webm')) return 'webm';
+  if (t.includes('ogg')) return 'ogg';
+  if (t.includes('mp4')) return 'm4a';
+  if (t.includes('wav')) return 'wav';
+  if (t.includes('mp3')) return 'mp3';
+  return 'webm';
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+}
+
+async function downloadAll(onlyExisting = false) {
+  for (const [sym] of BOPOMOFO) {
+    const blob = recorded.get(sym);
+    if (!blob) {
+      if (onlyExisting) continue;
+      else continue;
+    }
+    const ext = blobExt(blob);
+    downloadBlob(blob, `${sym}.${ext}`);
+    await new Promise(r => setTimeout(r, 250)); // 避免瀏覽器卡頓
+  }
+}
+
+document.getElementById('downloadAllBtn').addEventListener('click', () => downloadAll(false));
+document.getElementById('downloadMissingBtn').addEventListener('click', () => downloadAll(true));
+document.getElementById('playAllBtn').addEventListener('click', async () => {
+  for (const [sym, char] of BOPOMOFO) {
+    const blob = recorded.get(sym);
+    if (!blob) continue;
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+    document.getElementById('progress').textContent = `🔊 正在播：${sym}（${char}）`;
+    await new Promise(r => audio.onended = r);
+    URL.revokeObjectURL(url);
+  }
+  updateProgress();
+});
+document.getElementById('clearAllBtn').addEventListener('click', async () => {
+  if (!confirm('確定要清空所有錄音？這個動作無法復原。')) return;
+  recorded.clear();
+  await dbClear();
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.remove('has-recording');
+    c.querySelector('.status').textContent = '';
+  });
+  updateProgress();
+});
+
+// 啟動：載入既有錄音
+(async () => {
+  buildGrid();
+  await openDB();
+  for (const [sym] of BOPOMOFO) {
+    const blob = await dbGet(sym);
+    if (blob) {
+      recorded.set(sym, blob);
+      updateCard(sym);
+    }
+  }
+  updateProgress();
+})();
+</script>
+</body>
+</html>

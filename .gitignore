@@ -1,0 +1,13 @@
+# 排除備份檔
+*.bak*
+*.bak_*
+
+# Claude Code 本機設定（不上傳）
+.claude/
+
+# phonics-game 是巢狀 git repo，排除
+phonics-game/
+
+# 系統檔
+Thumbs.db
+.DS_Store

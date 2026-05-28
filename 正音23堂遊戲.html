@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026年7月 正音23堂闖關遊戲</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #FFE5F1 0%, #E5F4FF 50%, #FFF9E5 100%);
+    color: #333;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* === Top Bar === */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .topbar h1 {
+    font-size: 22px; color: #ff6b9d;
+    flex: 1; min-width: 200px;
+  }
+  .topbar button {
+    background: #FFB6D9; color: white; border: none;
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 14px; font-weight: bold; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 5px rgba(255,107,157,0.3);
+  }
+  .topbar button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,107,157,0.4); }
+  .topbar button.secondary { background: #A6D9F7; box-shadow: 0 2px 5px rgba(74,144,226,0.3); }
+  .topbar button.danger { background: #FFB088; box-shadow: 0 2px 5px rgba(255,140,80,0.3); }
+
+  /* === Main container === */
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .view { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* === Home: Lesson Map === */
+  .intro-banner {
+    background: linear-gradient(135deg, #FF9EC4, #FFB088);
+    color: white; padding: 24px; border-radius: 20px;
+    margin-bottom: 24px; text-align: center;
+    box-shadow: 0 6px 20px rgba(255,158,196,0.3);
+  }
+  .intro-banner h2 { font-size: 28px; margin-bottom: 8px; }
+  .intro-banner p { font-size: 16px; opacity: 0.95; }
+  .progress-bar {
+    background: rgba(255,255,255,0.3); height: 12px;
+    border-radius: 6px; overflow: hidden; margin-top: 16px;
+  }
+  .progress-bar-fill {
+    background: white; height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .lesson-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .lesson-card {
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 3px solid transparent;
+  }
+  .lesson-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    border-color: #FFB6D9;
+  }
+  .lesson-card.completed { border-color: #7ED957; background: #F0FFF0; }
+  .lesson-card.in-progress { border-color: #FFC857; }
+  .lesson-num {
+    display: inline-block;
+    background: #FFB6D9; color: white;
+    width: 36px; height: 36px;
+    border-radius: 50%; text-align: center;
+    line-height: 36px; font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .lesson-card.completed .lesson-num { background: #7ED957; }
+  .lesson-date { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .lesson-title { font-size: 16px; font-weight: bold; color: #444; margin-bottom: 8px; line-height: 1.4; }
+  .lesson-symbols { font-size: 22px; color: #ff6b9d; font-weight: bold; min-height: 50px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .lesson-stars { font-size: 16px; margin-top: 8px; }
+  .lesson-stars span { opacity: 0.3; }
+  .lesson-stars span.lit { opacity: 1; }
+
+  /* === Lesson menu === */
+  .back-btn {
+    background: #C8E6C9; color: #2e7d32; border: none;
+    padding: 10px 20px; border-radius: 25px;
+    font-size: 16px; cursor: pointer; margin-bottom: 20px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(46,125,50,0.2);
+  }
+  .lesson-header {
+    background: white; border-radius: 20px;
+    padding: 24px; margin-bottom: 24px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  }
+  .lesson-header h2 { font-size: 28px; color: #ff6b9d; margin-bottom: 12px; }
+  .lesson-header .symbols-display {
+    font-size: 44px; color: #4a90e2; margin: 14px 0;
+    font-weight: bold;
+    display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+  }
+  .lesson-header .pool-info { color: #666; font-size: 14px; margin-top: 8px; }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+  }
+  .game-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px 18px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 3px solid transparent;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  .game-card .icon { font-size: 56px; margin-bottom: 12px; display: block; }
+  .game-card .game-name { font-size: 18px; font-weight: bold; color: #444; margin-bottom: 6px; }
+  .game-card .game-desc { font-size: 12px; color: #888; line-height: 1.4; }
+  .game-card .badge {
+    display: inline-block; margin-top: 10px;
+    padding: 3px 12px; border-radius: 12px;
+    font-size: 12px; font-weight: bold;
+  }
+  .badge.practice { background: #C8E6C9; color: #2e7d32; }
+  .badge.test { background: #FFCDD2; color: #c62828; }
+  .game-card .stars { font-size: 18px; margin-top: 10px; }
+  .game-card .stars span { opacity: 0.3; }
+  .game-card .stars span.lit { opacity: 1; }
+  .game-card.completed { border-color: #7ED957; }
+
+  /* === Game area === */
+  .game-container {
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    min-height: 500px;
+  }
+  .game-title-bar {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 20px;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .game-title-bar h2 { color: #ff6b9d; font-size: 24px; }
+  .game-stats { display: flex; gap: 15px; }
+  .stat-box {
+    background: #FFF9E5; padding: 8px 16px; border-radius: 20px;
+    font-weight: bold; color: #b8860b;
+  }
+
+  /* Flashcard */
+  .flashcard-area {
+    text-align: center; padding: 40px 20px;
+  }
+  .flashcard {
+    display: inline-block;
+    background: linear-gradient(135deg, #FFE5F1, #FFF9E5);
+    border-radius: 30px;
+    padding: 50px 70px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.3s;
+    min-width: 280px;
+    min-height: 280px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+  .flashcard:hover { transform: scale(1.03); }
+  .flashcard .symbol {
+    font-size: 120px; color: #ff6b9d;
+    font-weight: bold; line-height: 1;
+  }
+  .flashcard .word {
+    font-size: 28px; color: #555; margin-top: 14px;
+  }
+  .flashcard .emoji { font-size: 60px; margin-top: 10px; }
+  .flashcard-controls {
+    display: flex; justify-content: center; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .ctrl-btn {
+    padding: 14px 28px; font-size: 18px;
+    border-radius: 30px; border: none; cursor: pointer;
+    font-weight: bold; transition: transform 0.15s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .ctrl-btn:hover { transform: translateY(-2px); }
+  .ctrl-btn.primary { background: #FFB6D9; color: white; }
+  .ctrl-btn.success { background: #7ED957; color: white; }
+  .ctrl-btn.info { background: #A6D9F7; color: white; }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .progress-text {
+    margin-top: 20px; color: #888; font-size: 14px;
+  }
+
+  /* Memory matching */
+  .memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .memory-card {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #FFB6D9, #FFC8E1);
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; font-weight: bold; color: white;
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .memory-card.flipped {
+    background: white;
+    color: #ff6b9d;
+    transform: rotateY(0);
+  }
+  .memory-card .back-text { display: block; }
+  .memory-card.matched {
+    background: linear-gradient(135deg, #7ED957, #A6E882);
+    color: white;
+    cursor: default;
+  }
+  .memory-card:not(.flipped):not(.matched) .back-text { font-size: 36px; }
+  .memory-card:not(.flipped):not(.matched) .face { display: none; }
+  .memory-card.flipped .back-text, .memory-card.matched .back-text { display: none; }
+  .memory-card.flipped .face, .memory-card.matched .face { display: block; }
+
+  /* Listen click */
+  .listen-area {
+    text-align: center; padding: 30px 20px;
+  }
+  .speaker-big {
+    display: inline-block;
+    background: linear-gradient(135deg, #A6D9F7, #C8E5FC);
+    border-radius: 50%;
+    width: 160px; height: 160px;
+    font-size: 80px;
+    line-height: 160px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(74,144,226,0.3);
+    transition: transform 0.2s;
+    margin-bottom: 30px;
+  }
+  .speaker-big:hover { transform: scale(1.05); }
+  .speaker-big:active { transform: scale(0.95); }
+  .choices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 14px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .choice-btn {
+    background: white;
+    border: 3px solid #FFE5F1;
+    border-radius: 16px;
+    padding: 18px 10px;
+    font-size: 48px; font-weight: bold;
+    color: #ff6b9d;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+  }
+  .choice-btn:hover { transform: translateY(-3px); border-color: #FFB6D9; }
+  .choice-btn.correct { background: #7ED957; color: white; border-color: #5BB83A; animation: bounce 0.5s; }
+  .choice-btn.wrong { background: #FF8888; color: white; border-color: #E66666; animation: shake 0.4s; }
+  .choice-btn.disabled { pointer-events: none; opacity: 0.5; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* Spin wheel */
+  .wheel-container {
+    text-align: center; padding: 20px;
+    position: relative;
+  }
+  .wheel-wrapper {
+    position: relative;
+    width: 340px; height: 340px;
+    margin: 0 auto 30px;
+  }
+  .wheel {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    transition: transform 4s cubic-bezier(0.17, 0.67, 0.32, 1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .wheel-pointer {
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 40px solid #ff3b6b;
+    z-index: 10;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,0.2));
+  }
+  .wheel-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: white;
+    border-radius: 50%;
+    z-index: 5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  /* Drag area for sort */
+  .sort-area {
+    margin-top: 20px;
+  }
+  .draggable-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 3px solid #FFB6D9;
+    border-radius: 14px;
+    padding: 12px 22px;
+    font-size: 36px; font-weight: bold;
+    color: #ff6b9d;
+    margin: 6px;
+    cursor: grab;
+    transition: transform 0.2s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    min-height: 70px;
+  }
+  .draggable-symbol:hover { transform: scale(1.05); }
+  .draggable-symbol.placed { opacity: 0.3; }
+  .baskets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .basket {
+    background: #FFF9E5;
+    border: 4px dashed #FFC857;
+    border-radius: 18px;
+    padding: 20px;
+    min-height: 140px;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .basket.drag-over { background: #FFE5F1; border-color: #FFB6D9; }
+  .basket .basket-label {
+    font-size: 18px; font-weight: bold; color: #b8860b;
+    margin-bottom: 12px;
+  }
+  .basket .basket-contents {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  }
+  .basket .basket-item {
+    background: #FFB6D9; color: white;
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 22px; font-weight: bold;
+  }
+
+  /* Connect lines (連連看) */
+  .connect-area {
+    display: flex; justify-content: space-between;
+    max-width: 700px; margin: 0 auto;
+    gap: 60px;
+    position: relative;
+  }
+  .connect-col {
+    display: flex; flex-direction: column; gap: 12px; flex: 1;
+  }
+  .connect-item {
+    background: white;
+    border: 3px solid #C8E5FC;
+    border-radius: 14px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    font-size: 28px; font-weight: bold;
+    color: #4a90e2;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .connect-item:hover { transform: scale(1.03); border-color: #A6D9F7; }
+  .connect-item.selected { background: #A6D9F7; color: white; border-color: #4a90e2; }
+  .connect-item.matched { background: #C8E6C9; color: #2e7d32; border-color: #7ED957; pointer-events: none; }
+  .connect-item.wrong { animation: shake 0.4s; border-color: #FF8888; }
+  .connect-item .emoji { font-size: 40px; }
+
+  /* Maze */
+  .maze-grid {
+    display: grid;
+    gap: 3px;
+    background: #444;
+    padding: 3px;
+    border-radius: 12px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .maze-cell {
+    aspect-ratio: 1;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #ff6b9d;
+  }
+  .maze-cell.wall { background: #444; cursor: default; }
+  .maze-cell.start { background: #7ED957; color: white; font-size: 28px; }
+  .maze-cell.goal { background: #FFC857; color: white; font-size: 28px; }
+  .maze-cell.path { background: #FFE5F1; }
+  .maze-cell.visited { background: #C8E5FC; }
+  .maze-cell.current { background: #FFB6D9; color: white; transform: scale(1.05); }
+
+  /* Quiz */
+  .quiz-area {
+    text-align: center;
+  }
+  .quiz-question {
+    background: linear-gradient(135deg, #FFE5F1, #FFF9E5);
+    padding: 30px; border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .quiz-question h3 { font-size: 22px; color: #555; margin-bottom: 16px; }
+  .quiz-question .big-symbol {
+    font-size: 96px; color: #ff6b9d; font-weight: bold;
+  }
+  .quiz-progress {
+    background: #eee; height: 10px; border-radius: 5px;
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .quiz-progress-fill {
+    background: linear-gradient(90deg, #FFB6D9, #FFC857);
+    height: 100%; transition: width 0.4s;
+  }
+
+  /* Result modal */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s;
+  }
+  .modal {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    max-width: 90%;
+    width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: popIn 0.4s cubic-bezier(0.4, 1.5, 0.6, 1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal .emoji-big { font-size: 80px; margin-bottom: 16px; }
+  .modal h2 { color: #ff6b9d; font-size: 28px; margin-bottom: 12px; }
+  .modal .stars-result { font-size: 50px; margin: 16px 0; }
+  .modal .score-text { font-size: 18px; color: #666; margin-bottom: 20px; }
+  .modal .modal-msg { color: #888; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+  .modal-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* Celebration */
+  .confetti {
+    position: fixed;
+    width: 10px; height: 10px;
+    pointer-events: none;
+    z-index: 999;
+    animation: confettiFall 3s linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* === Vertical Bopomofo (直式注音) === */
+  .vbopo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    gap: 0;
+  }
+  .vbopo > span {
+    display: block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+  }
+  .symbols-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .symbols-row-small { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+  /* Tone game special */
+  .tone-track {
+    background: #FFF9E5;
+    border-radius: 16px;
+    padding: 30px;
+    margin: 20px 0;
+    position: relative;
+    min-height: 200px;
+  }
+  .tone-baselines {
+    position: relative; height: 120px;
+    border-top: 2px dashed #ddd;
+    border-bottom: 2px dashed #ddd;
+  }
+  .tone-shape {
+    display: inline-block;
+    padding: 18px 30px;
+    border-radius: 30px;
+    font-size: 28px; font-weight: bold;
+    color: white;
+    margin: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .tone-shape:hover { transform: scale(1.05); }
+  .tone-shape.t1 { background: #4a90e2; }
+  .tone-shape.t2 { background: #7ED957; }
+  .tone-shape.t3 { background: #FFC857; }
+  .tone-shape.t4 { background: #FF8888; }
+  .tone-shape.t5 { background: #B59FE2; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .memory-grid { grid-template-columns: repeat(3, 1fr); }
+    .flashcard { padding: 30px 40px; min-width: 200px; min-height: 220px; }
+    .flashcard .symbol { font-size: 80px; }
+    .wheel-wrapper { width: 280px; height: 280px; }
+    .topbar h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1 id="page-title">🌟 2026年7月 正音23堂闖關 🌟</h1>
+  <button id="btn-home" onclick="goHome()">🏠 回首頁</button>
+  <button id="btn-export" class="secondary" onclick="exportProgress()">💾 匯出進度</button>
+  <button id="btn-import" class="secondary" onclick="importProgress()">📂 匯入進度</button>
+  <button id="btn-reset" class="danger" onclick="resetProgress()">🔄 重新開始</button>
+  <select id="voice-select" onchange="changeVoice(this.value)" style="padding:6px 10px;border-radius:14px;border:2px solid #FFB6D9;background:white;font-size:13px;cursor:pointer;max-width:200px;" title="選擇語音(請選擇含 Hanhan/Yating 的台灣語音)"></select>
+  <input type="file" id="import-file" accept=".json" style="display:none">
+</div>
+
+<div class="container" id="main-container">
+  <!-- Views injected here -->
+</div>
+
+<script>
+/* ========================================
+   注音符號資料庫
+   每個注音對應：說明詞、emoji、發音文字
+   ======================================== */
+const PHONETIC_DATA = {
+  'ㄧㄢ': { word: '眼', emoji: '👁️', speech: '煙' },
+  'ㄧㄠ': { word: '咬', emoji: '😬', speech: '腰' },
+  'ㄧㄡ': { word: '游', emoji: '🏊', speech: '優' },
+  'ㄧㄝ': { word: '葉', emoji: '🍃', speech: '椰' },
+  'ㄧㄚ': { word: '芽', emoji: '🌱', speech: '鴨' },
+  'ㄧㄣ': { word: '音', emoji: '🎵', speech: '音' },
+  'ㄜ': { word: '鵝', emoji: '🦢', speech: 'ㄜ' },
+  'ㄛ': { word: '喔', emoji: '😮', speech: 'ㄛ' },
+  'ㄨㄛ': { word: '我', emoji: '🙋', speech: '窩' },
+  'ㄧㄛ': { word: '唷', emoji: '😊', speech: '唷' },
+  'ㄤ': { word: '鐺', emoji: '🔔', speech: 'ㄤ' },
+  'ㄧㄤ': { word: '癢', emoji: '🤧', speech: '央' },
+  'ㄧㄥ': { word: '贏', emoji: '🏆', speech: '鷹' },
+  'ㄨ': { word: '烏', emoji: '🐢', speech: 'ㄨ' },
+  'ㄨㄟ': { word: '喂', emoji: '📞', speech: '威' },
+  'ㄞ': { word: '太', emoji: '☀️', speech: 'ㄞ' },
+  'ㄨㄞ': { word: '歪', emoji: '🤪', speech: '歪' },
+  'ㄨㄢ': { word: '彎', emoji: '〰️', speech: '彎' },
+  'ㄨㄤ': { word: '網', emoji: '🕸️', speech: '汪' },
+  'ㄨㄥ': { word: '甕', emoji: '🏺', speech: '翁' },
+  'ㄨㄚ': { word: '挖', emoji: '⛏️', speech: '蛙' },
+  'ㄣ': { word: '蚊', emoji: '🦟', speech: 'ㄣ' },
+  'ㄨㄣ': { word: '溫', emoji: '🌡️', speech: '溫' },
+  'ㄩㄣ': { word: '暈', emoji: '😵', speech: '暈' },
+  'ㄢ': { word: '安', emoji: '🛡️', speech: 'ㄢ' },
+  'ㄩㄝ': { word: '樂', emoji: '🎶', speech: '約' },
+  'ㄩㄢ': { word: '圓', emoji: '⭕', speech: '冤' },
+  'ㄩㄥ': { word: '勇', emoji: '💪', speech: '傭' },
+  'ㄅ': { word: '杯', emoji: '🥛', speech: 'ㄅ' },
+  'ㄆ': { word: '螃', emoji: '🦀', speech: 'ㄆ' },
+  'ㄇ': { word: '帽', emoji: '🧢', speech: 'ㄇ' },
+  'ㄈ': { word: '風', emoji: '💨', speech: 'ㄈ' },
+  'ㄉ': { word: '袋', emoji: '🦘', speech: 'ㄉ' },
+  'ㄊ': { word: '桃', emoji: '🍑', speech: 'ㄊ' },
+  'ㄋ': { word: '南', emoji: '🎃', speech: 'ㄋ' },
+  'ㄌ': { word: '老', emoji: '🐭', speech: 'ㄌ' },
+  'ㄍ': { word: '鴿', emoji: '🕊️', speech: 'ㄍ' },
+  'ㄎ': { word: '蝌', emoji: '🐸', speech: 'ㄎ' },
+  'ㄏ': { word: '花', emoji: '🌸', speech: 'ㄏ' },
+  'ㄐ': { word: '雞', emoji: '🐔', speech: 'ㄐ' },
+  'ㄑ': { word: '旗', emoji: '🚩', speech: 'ㄑ' },
+  'ㄒ': { word: '西', emoji: '🍉', speech: 'ㄒ' },
+  'ㄓ': { word: '植', emoji: '🌳', speech: 'ㄓ' },
+  'ㄔ': { word: '吃', emoji: '🍴', speech: 'ㄔ' },
+  'ㄕ': { word: '書', emoji: '📚', speech: 'ㄕ' },
+  'ㄖ': { word: '日', emoji: '📅', speech: 'ㄖ' },
+  'ㄗ': { word: '粽', emoji: '🍙', speech: 'ㄗ' },
+  'ㄘ': { word: '刺', emoji: '🦔', speech: 'ㄘ' },
+  'ㄙ': { word: '絲', emoji: '🥒', speech: 'ㄙ' },
+  'ㄧ': { word: '衣', emoji: '👕', speech: 'ㄧ' },
+  'ㄩ': { word: '魚', emoji: '🐟', speech: 'ㄩ' },
+  'ㄚ': { word: '阿', emoji: '🪖', speech: 'ㄚ' },
+  'ㄝ': { word: '葉', emoji: '🍃', speech: 'ㄝ' },
+  'ㄟ': { word: '貝', emoji: '🐚', speech: 'ㄟ' },
+  'ㄠ': { word: '貓', emoji: '🐱', speech: 'ㄠ' },
+  'ㄡ': { word: '鷗', emoji: '🐦', speech: 'ㄡ' },
+  'ㄥ': { word: '燈', emoji: '💡', speech: 'ㄥ' },
+  'ㄦ': { word: '耳', emoji: '👂', speech: 'ㄦ' },
+};
+
+/* ========================================
+   23 堂課程資料
+   ======================================== */
+const LESSONS = [
+  { id: 1, date: '7/1', day: '三', title: 'ㄧ系結合韻(一)', newContent: ['ㄧㄢ', 'ㄧㄠ', 'ㄧㄡ'] },
+  { id: 2, date: '7/2', day: '四', title: 'ㄧ系結合韻(二)', newContent: ['ㄧㄝ', 'ㄧㄚ', 'ㄧㄣ'] },
+  { id: 3, date: '7/3', day: '五', title: 'ㄧ系結合韻總複習', newContent: [], reviewMode: true },
+  { id: 4, date: '7/6', day: '一', title: 'ㄜㄛ與圓唇韻', newContent: ['ㄜ', 'ㄛ', 'ㄨㄛ', 'ㄧㄛ'] },
+  { id: 5, date: '7/7', day: '二', title: '後鼻音 ㄤ ㄧㄤ ㄧㄥ', newContent: ['ㄤ', 'ㄧㄤ', 'ㄧㄥ'] },
+  { id: 6, date: '7/8', day: '三', title: 'ㄨ系開頭', newContent: ['ㄨ', 'ㄨㄟ', 'ㄞ', 'ㄨㄞ'] },
+  { id: 7, date: '7/9', day: '四', title: 'ㄨ系延伸', newContent: ['ㄨㄢ', 'ㄨㄤ', 'ㄨㄥ', 'ㄨㄚ'] },
+  { id: 8, date: '7/10', day: '五', title: 'ㄨ系結合韻複習', newContent: [], reviewMode: true },
+  { id: 9, date: '7/13', day: '一', title: '前鼻音 ㄣ ㄨㄣ ㄩㄣ ㄢ', newContent: ['ㄣ', 'ㄨㄣ', 'ㄩㄣ', 'ㄢ'] },
+  { id: 10, date: '7/14', day: '二', title: 'ㄩ系結合韻', newContent: ['ㄩㄝ', 'ㄩㄢ', 'ㄩㄥ'] },
+  { id: 11, date: '7/15', day: '三', title: '結合韻總整理', newContent: [], reviewMode: true, special: 'sort' },
+  { id: 12, date: '7/16', day: '四', title: '聲符 ㄅㄌㄉ', newContent: ['ㄅ', 'ㄌ', 'ㄉ'] },
+  { id: 13, date: '7/17', day: '五', title: '聲符 ㄇㄩㄈ', newContent: ['ㄇ', 'ㄩ', 'ㄈ'] },
+  { id: 14, date: '7/20', day: '一', title: '聲符 ㄆㄎㄗㄙ', newContent: ['ㄆ', 'ㄎ', 'ㄗ', 'ㄙ'] },
+  { id: 15, date: '7/21', day: '二', title: '聲符拼讀複習', newContent: [], reviewMode: true },
+  { id: 16, date: '7/22', day: '三', title: '聲符 ㄊㄠㄒㄋㄍ', newContent: ['ㄊ', 'ㄠ', 'ㄒ', 'ㄋ', 'ㄍ'] },
+  { id: 17, date: '7/23', day: '四', title: '聲符 ㄐㄑㄔㄕㄖㄘ', newContent: ['ㄐ', 'ㄑ', 'ㄔ', 'ㄕ', 'ㄖ', 'ㄘ'] },
+  { id: 18, date: '7/24', day: '五', title: '單韻 ㄦㄓ等', newContent: ['ㄦ', 'ㄓ'] },
+  { id: 19, date: '7/27', day: '一', title: '單韻 ㄧㄨㄞㄢ複習', newContent: [], reviewMode: true },
+  { id: 20, date: '7/28', day: '二', title: '單韻 ㄝㄟㄡ', newContent: ['ㄝ', 'ㄟ', 'ㄡ'] },
+  { id: 21, date: '7/29', day: '三', title: '單韻 ㄥㄏ補強', newContent: ['ㄥ', 'ㄏ'] },
+  { id: 22, date: '7/30', day: '四', title: '聲調 一二三四五聲', newContent: [], special: 'tone' },
+  { id: 23, date: '7/31', day: '五', title: '蚊子歌與總複習', newContent: [], special: 'finale' },
+];
+
+/* 取得某堂課的累加題庫 */
+function getLessonPool(lessonId) {
+  const pool = [];
+  for (let i = 0; i < lessonId; i++) {
+    LESSONS[i].newContent.forEach(s => {
+      if (!pool.includes(s)) pool.push(s);
+    });
+  }
+  return pool;
+}
+
+/* 取得當堂課要重點練習的內容（新+少量舊） */
+function getLessonFocus(lessonId) {
+  const lesson = LESSONS[lessonId - 1];
+  if (lesson.newContent.length > 0) return lesson.newContent;
+  // 複習課：用前面所有的
+  return getLessonPool(lessonId);
+}
+
+/* ========================================
+   進度管理
+   ======================================== */
+const STORAGE_KEY = 'phonetic23_progress_v1';
+let progress = loadProgress();
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { lessons: {} };
+}
+
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+function recordGameScore(lessonId, gameId, score, stars) {
+  if (!progress.lessons[lessonId]) progress.lessons[lessonId] = {};
+  const prev = progress.lessons[lessonId][gameId] || { stars: 0, score: 0 };
+  if (stars > prev.stars) {
+    progress.lessons[lessonId][gameId] = { stars, score, completed: true };
+  } else {
+    progress.lessons[lessonId][gameId] = { ...prev, completed: true };
+  }
+  saveProgress();
+}
+
+function getLessonStatus(lessonId) {
+  const p = progress.lessons[lessonId];
+  if (!p) return 'pending';
+  const games = Object.values(p);
+  if (games.length === 0) return 'pending';
+  if (games.length >= 5 && games.every(g => g.stars >= 2)) return 'completed';
+  return 'in-progress';
+}
+
+function getGameStars(lessonId, gameId) {
+  return progress.lessons[lessonId]?.[gameId]?.stars || 0;
+}
+
+function exportProgress() {
+  const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '正音23堂進度_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProgress() {
+  document.getElementById('import-file').click();
+}
+
+document.getElementById('import-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.lessons) {
+        progress = data;
+        saveProgress();
+        alert('✅ 進度匯入成功！');
+        goHome();
+      } else {
+        alert('❌ 檔案格式不正確');
+      }
+    } catch(err) {
+      alert('❌ 無法讀取此檔案');
+    }
+  };
+  reader.readAsText(file);
+});
+
+function resetProgress() {
+  if (confirm('確定要清除所有進度嗎？此動作無法復原。\n\n建議先「匯出進度」備份。')) {
+    progress = { lessons: {} };
+    saveProgress();
+    goHome();
+  }
+}
+
+/* ========================================
+   語音 — 優先使用支援注音符號的台灣語音
+   ======================================== */
+let voicesReady = false;
+let zhVoice = null;
+let allZhVoices = [];
+
+function initVoices() {
+  const voices = speechSynthesis.getVoices();
+  // 優先順序：Microsoft Hanhan/Yating (Windows 內建,支援注音) > 其他 zh-TW > zh-CN > 任何中文
+  const preferOrder = [
+    v => v.lang === 'zh-TW' && /Hanhan|Yating|HsiaoChen/i.test(v.name),
+    v => v.lang === 'zh-TW' && /Microsoft/i.test(v.name),
+    v => v.lang === 'zh-TW',
+    v => v.lang === 'zh-HK',
+    v => v.lang.startsWith('zh'),
+  ];
+  for (const matcher of preferOrder) {
+    const found = voices.find(matcher);
+    if (found) { zhVoice = found; break; }
+  }
+  if (!zhVoice && voices.length > 0) zhVoice = voices[0];
+  allZhVoices = voices.filter(v => v.lang.startsWith('zh'));
+  voicesReady = true;
+  // 若有 UI 已渲染，更新語音選單
+  const sel = document.getElementById('voice-select');
+  if (sel) renderVoiceSelect();
+}
+speechSynthesis.onvoiceschanged = initVoices;
+setTimeout(initVoices, 200);
+setTimeout(initVoices, 1000);  // 再嘗試一次，確保語音清單載入
+
+function speak(text, rate = 0.8) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'zh-TW';
+  utter.rate = rate;
+  utter.pitch = 1.05;
+  if (zhVoice) utter.voice = zhVoice;
+  speechSynthesis.speak(utter);
+}
+
+function speakSymbol(symbol) {
+  const data = PHONETIC_DATA[symbol];
+  if (data) speak(data.speech);
+  else speak(symbol);
+}
+
+/* 語音選單(讓使用者切換不同語音以找到最佳的注音念法) */
+function renderVoiceSelect() {
+  const sel = document.getElementById('voice-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  allZhVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang})`;
+    if (zhVoice && v.name === zhVoice.name) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function changeVoice(name) {
+  const v = allZhVoices.find(x => x.name === name);
+  if (v) {
+    zhVoice = v;
+    speak('您好，這是測試聲音');
+  }
+}
+
+/* ========================================
+   工具
+   ======================================== */
+/* 直式注音：把字串中每個字元拆開，垂直堆疊
+   注意：注音 ㄧ(U+3127) 在 Windows 字型常被畫成直線「｜」，
+   改用中文字 一(U+4E00) 顯示以強制保持橫線形狀，看起來一樣但永遠是橫的。
+   只替換顯示，原字串資料維持 ㄧ 不變(比對、發音、進度都用原 ㄧ)。 */
+function bopoDisplay(c) {
+  return c === 'ㄧ' ? '一' : c;
+}
+function vbopo(s) {
+  if (!s) return '';
+  return `<span class="vbopo">${[...s].map(c => `<span>${bopoDisplay(c)}</span>`).join('')}</span>`;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr, n) {
+  return shuffle(arr).slice(0, n);
+}
+
+function stars(n) {
+  return '★★★☆☆☆'.slice(0,3).split('').map((_, i) =>
+    `<span class="${i < n ? 'lit' : ''}">⭐</span>`).join('');
+}
+
+function confetti() {
+  const colors = ['#FFB6D9', '#FFC857', '#7ED957', '#A6D9F7', '#FF8888'];
+  for (let i = 0; i < 50; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.animationDuration = (2 + Math.random() * 2) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4000);
+  }
+}
+
+/* ========================================
+   遊戲定義
+   ======================================== */
+const GAMES = [
+  { id: 'flashcard', name: '🌟 認讀字卡', desc: '看符號、聽發音，輕鬆認讀', type: 'practice', icon: '🌟' },
+  { id: 'memory',    name: '🎴 記憶翻翻牌', desc: '翻翻牌找出相同注音', type: 'practice', icon: '🎴' },
+  { id: 'listen',    name: '👂 聽音點點看', desc: '聽發音點選正確注音', type: 'practice', icon: '👂' },
+  { id: 'mix',       name: '🎡 多元小遊戲', desc: '轉盤、連連看、分類、迷宮輪流', type: 'practice', icon: '🎡' },
+  { id: 'quiz',      name: '🏆 闖關測驗', desc: '10題綜合測驗，看看你的星等', type: 'test', icon: '🏆' },
+];
+
+/* 每堂課第 4 個遊戲（mix）會用什麼類型 */
+function getMixGameType(lessonId) {
+  const lesson = LESSONS[lessonId - 1];
+  if (lesson.special === 'sort') return 'sort';
+  if (lesson.special === 'tone') return 'tone';
+  if (lesson.special === 'finale') return 'finale';
+  const types = ['wheel', 'connect', 'sort', 'maze'];
+  return types[(lessonId - 1) % types.length];
+}
+
+/* ========================================
+   檢視層 - 路由
+   ======================================== */
+let currentView = 'home';
+let currentLesson = null;
+
+function goHome() {
+  currentView = 'home';
+  currentLesson = null;
+  renderHome();
+}
+
+function goLesson(id) {
+  currentView = 'lesson';
+  currentLesson = id;
+  renderLessonMenu(id);
+}
+
+function goGame(lessonId, gameId) {
+  currentView = 'game';
+  renderGame(lessonId, gameId);
+}
+
+/* === 首頁渲染 === */
+function renderHome() {
+  const container = document.getElementById('main-container');
+  const completed = LESSONS.filter(l => getLessonStatus(l.id) === 'completed').length;
+  const inProgress = LESSONS.filter(l => getLessonStatus(l.id) === 'in-progress').length;
+  const pct = Math.round((completed / LESSONS.length) * 100);
+
+  let html = `
+    <div class="view">
+      <div class="intro-banner">
+        <h2>🎉 歡迎來到正音闖關樂園 🎉</h2>
+        <p>跟著進度一堂一堂玩，每堂5種遊戲等你挑戰！</p>
+        <div style="margin-top:14px;font-size:14px;">
+          已完成 <strong>${completed}</strong> 堂 ・ 進行中 <strong>${inProgress}</strong> 堂 ・ 共 23 堂
+        </div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="lesson-grid">
+  `;
+
+  LESSONS.forEach(lesson => {
+    const status = getLessonStatus(lesson.id);
+    const symbolsStr = lesson.newContent.length > 0
+      ? lesson.newContent.map(s => vbopo(s)).join('')
+      : '<span style="font-size:16px;">🔄 複習堂</span>';
+    const games = progress.lessons[lesson.id] || {};
+    const totalStars = Object.values(games).reduce((sum, g) => sum + (g.stars || 0), 0);
+    const maxStars = 15;
+    html += `
+      <div class="lesson-card ${status}" onclick="goLesson(${lesson.id})">
+        <div class="lesson-num">${lesson.id}</div>
+        <div class="lesson-date">${lesson.date} (週${lesson.day})</div>
+        <div class="lesson-title">${lesson.title}</div>
+        <div class="lesson-symbols">${symbolsStr}</div>
+        <div class="lesson-stars">⭐ ${totalStars} / ${maxStars}</div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+/* === 課堂選單渲染 === */
+function renderLessonMenu(lessonId) {
+  const lesson = LESSONS[lessonId - 1];
+  const pool = getLessonPool(lessonId);
+  const focus = getLessonFocus(lessonId);
+  const container = document.getElementById('main-container');
+
+  let html = `
+    <div class="view">
+      <button class="back-btn" onclick="goHome()">← 回首頁</button>
+      <div class="lesson-header">
+        <h2>第 ${lesson.id} 堂｜${lesson.title}</h2>
+        <div style="color:#888;font-size:14px;">${lesson.date} 週${lesson.day}</div>
+        <div class="symbols-display">${focus.map(s => vbopo(s)).join('')}</div>
+        <div class="pool-info">📚 累積題庫共 <strong>${pool.length}</strong> 個注音｜含本堂 <strong>${focus.length}</strong> 個重點</div>
+      </div>
+      <div class="game-grid">
+  `;
+
+  GAMES.forEach(game => {
+    const s = getGameStars(lessonId, game.id);
+    const isCompleted = s >= 2;
+    html += `
+      <div class="game-card ${isCompleted ? 'completed' : ''}" onclick="goGame(${lessonId}, '${game.id}')">
+        <div class="icon">${game.icon}</div>
+        <div class="game-name">${game.name.replace(/^[^ ]+ /, '')}</div>
+        <div class="game-desc">${game.desc}</div>
+        <div class="badge ${game.type}">${game.type === 'practice' ? '🟢 練習' : '🔴 測驗'}</div>
+        <div class="stars">${stars(s)}</div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+/* ========================================
+   遊戲：認讀字卡
+   ======================================== */
+function renderGame(lessonId, gameId) {
+  const container = document.getElementById('main-container');
+  const lesson = LESSONS[lessonId - 1];
+  const focus = getLessonFocus(lessonId);
+  const pool = getLessonPool(lessonId);
+
+  let html = `
+    <div class="view">
+      <button class="back-btn" onclick="goLesson(${lessonId})">← 回課堂選單</button>
+      <div class="game-container" id="game-area">
+  `;
+  container.innerHTML = html + '</div></div>';
+
+  const area = document.getElementById('game-area');
+
+  if (gameId === 'flashcard') buildFlashcard(area, lessonId, focus, pool);
+  else if (gameId === 'memory') buildMemory(area, lessonId, focus, pool);
+  else if (gameId === 'listen') buildListen(area, lessonId, focus, pool);
+  else if (gameId === 'mix') {
+    const type = getMixGameType(lessonId);
+    if (type === 'wheel') buildWheel(area, lessonId, focus, pool);
+    else if (type === 'connect') buildConnect(area, lessonId, focus, pool);
+    else if (type === 'sort') buildSort(area, lessonId, focus, pool);
+    else if (type === 'maze') buildMaze(area, lessonId, focus, pool);
+    else if (type === 'tone') buildTone(area, lessonId);
+    else if (type === 'finale') buildFinale(area, lessonId, pool);
+  }
+  else if (gameId === 'quiz') buildQuiz(area, lessonId, focus, pool);
+}
+
+/* === 認讀字卡 === */
+function buildFlashcard(area, lessonId, focus, pool) {
+  // 認讀使用「本堂重點 + 少量舊」
+  const cards = lesson_buildCardSet(focus, pool, 8);
+  let idx = 0;
+
+  function render() {
+    const sym = cards[idx];
+    const data = PHONETIC_DATA[sym] || { word: sym, emoji: '❓', speech: sym };
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🌟 認讀字卡</h2>
+        <div class="game-stats"><div class="stat-box">${idx + 1} / ${cards.length}</div></div>
+      </div>
+      <div class="flashcard-area">
+        <div class="flashcard" id="card" onclick="speakSymbol('${sym}')">
+          <div class="symbol">${vbopo(sym)}</div>
+          <div class="word">${data.word}</div>
+          <div class="emoji">${data.emoji}</div>
+        </div>
+        <div class="flashcard-controls">
+          <button class="ctrl-btn info" onclick="speakSymbol('${sym}')">🔊 再聽一次</button>
+          <button class="ctrl-btn primary" id="next-btn">下一張 →</button>
+        </div>
+        <div class="progress-text">點字卡或按按鈕聽發音，準備好就按「下一張」</div>
+      </div>
+    `;
+    // Auto-speak when card appears
+    setTimeout(() => speakSymbol(sym), 300);
+
+    document.getElementById('next-btn').onclick = () => {
+      idx++;
+      if (idx >= cards.length) finish();
+      else render();
+    };
+  }
+
+  function finish() {
+    const stars = 3; // 認讀無對錯，完成即三星
+    recordGameScore(lessonId, 'flashcard', cards.length, stars);
+    showResult({
+      emoji: '🎉',
+      title: '太棒了！認讀完成',
+      stars,
+      score: `${cards.length} 個注音都看過了`,
+      msg: '繼續挑戰下一個遊戲，加深記憶吧！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* 工具：取「本堂重點為主 + 舊內容適量」的題目集 */
+function lesson_buildCardSet(focus, pool, total) {
+  const newOnes = focus.slice();
+  const old = pool.filter(s => !focus.includes(s));
+  const numOld = Math.min(old.length, Math.max(0, total - newOnes.length));
+  const oldPick = pickRandom(old, numOld);
+  let combined = [...newOnes, ...oldPick];
+  if (combined.length < total) {
+    // 重複本堂以湊滿
+    while (combined.length < total) {
+      combined.push(newOnes[combined.length % newOnes.length]);
+    }
+  }
+  return shuffle(combined.slice(0, total));
+}
+
+/* === 記憶翻翻牌 === */
+function buildMemory(area, lessonId, focus, pool) {
+  // 取 6 個不重複注音，做成 12 張卡（每個出現 2 次）
+  const baseCount = Math.min(8, Math.max(3, focus.length + 3));
+  const picks = lesson_buildCardSet(focus, pool, baseCount).filter((v, i, a) => a.indexOf(v) === i);
+  // 確保至少 6 個
+  if (picks.length < 6) {
+    const extras = pool.filter(s => !picks.includes(s));
+    picks.push(...pickRandom(extras, 6 - picks.length));
+  }
+  const usePicks = picks.slice(0, Math.min(8, picks.length));
+  const cards = shuffle([...usePicks, ...usePicks].map((s, i) => ({ sym: s, id: i })));
+
+  let flipped = [];
+  let matched = 0;
+  let attempts = 0;
+  const startTime = Date.now();
+
+  function render() {
+    const cols = cards.length <= 12 ? 4 : 4;
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🎴 記憶翻翻牌</h2>
+        <div class="game-stats">
+          <div class="stat-box">配對 ${matched}/${cards.length / 2}</div>
+          <div class="stat-box">嘗試 ${attempts}</div>
+        </div>
+      </div>
+      <div class="memory-grid" id="memory-grid" style="grid-template-columns:repeat(${cols},1fr)"></div>
+    `;
+    const grid = document.getElementById('memory-grid');
+    cards.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = 'memory-card';
+      div.dataset.idx = i;
+      div.innerHTML = `<span class="back-text">?</span><span class="face">${vbopo(c.sym)}</span>`;
+      div.onclick = () => flipCard(i, div);
+      grid.appendChild(div);
+    });
+  }
+
+  function flipCard(i, el) {
+    if (el.classList.contains('flipped') || el.classList.contains('matched')) return;
+    if (flipped.length >= 2) return;
+
+    el.classList.add('flipped');
+    speakSymbol(cards[i].sym);
+    flipped.push({ i, el });
+
+    if (flipped.length === 2) {
+      attempts++;
+      const [a, b] = flipped;
+      if (cards[a.i].sym === cards[b.i].sym) {
+        setTimeout(() => {
+          a.el.classList.add('matched');
+          b.el.classList.add('matched');
+          matched++;
+          flipped = [];
+          updateStats();
+          if (matched === cards.length / 2) finish();
+        }, 600);
+      } else {
+        setTimeout(() => {
+          a.el.classList.remove('flipped');
+          b.el.classList.remove('flipped');
+          flipped = [];
+          updateStats();
+        }, 1000);
+      }
+    }
+  }
+
+  function updateStats() {
+    const stats = area.querySelector('.game-stats');
+    stats.innerHTML = `<div class="stat-box">配對 ${matched}/${cards.length / 2}</div><div class="stat-box">嘗試 ${attempts}</div>`;
+  }
+
+  function finish() {
+    const perfectAttempts = cards.length / 2;
+    const ratio = perfectAttempts / attempts;
+    let stars = 1;
+    if (ratio >= 0.8) stars = 3;
+    else if (ratio >= 0.6) stars = 2;
+    recordGameScore(lessonId, 'memory', attempts, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars >= 2 ? '🎉' : '💪',
+      title: stars >= 2 ? '太厲害了！全部配對成功' : '完成了！再玩一次更熟練',
+      stars,
+      score: `共嘗試 ${attempts} 次（最佳：${perfectAttempts} 次）`,
+      msg: stars >= 2 ? '記憶力一級棒，繼續下一個遊戲！' : '多玩幾次會更厲害喔！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 聽音點點看 === */
+function buildListen(area, lessonId, focus, pool) {
+  const questions = [];
+  const qPool = lesson_buildCardSet(focus, pool, 10);
+  qPool.forEach(target => {
+    const distractors = pickRandom(pool.filter(s => s !== target), 3);
+    const choices = shuffle([target, ...distractors]);
+    questions.push({ target, choices });
+  });
+
+  let idx = 0;
+  let correct = 0;
+
+  function render() {
+    const q = questions[idx];
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>👂 聽音點點看</h2>
+        <div class="game-stats">
+          <div class="stat-box">${idx + 1}/${questions.length}</div>
+          <div class="stat-box">答對 ${correct}</div>
+        </div>
+      </div>
+      <div class="listen-area">
+        <div class="speaker-big" onclick="speakSymbol('${q.target}')">🔊</div>
+        <p style="color:#666;margin-bottom:20px;font-size:16px;">點喇叭聽音，再選出正確的注音</p>
+        <div class="choices-grid" id="choices"></div>
+      </div>
+    `;
+    const cg = document.getElementById('choices');
+    q.choices.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.dataset.sym = sym;
+      btn.innerHTML = vbopo(sym);
+      btn.onclick = () => answer(sym, btn, q.target);
+      cg.appendChild(btn);
+    });
+    setTimeout(() => speakSymbol(q.target), 400);
+  }
+
+  function answer(sym, btn, target) {
+    const allBtns = area.querySelectorAll('.choice-btn');
+    allBtns.forEach(b => b.classList.add('disabled'));
+    if (sym === target) {
+      btn.classList.add('correct');
+      correct++;
+      setTimeout(next, 900);
+    } else {
+      btn.classList.add('wrong');
+      allBtns.forEach(b => { if (b.dataset.sym === target) b.classList.add('correct'); });
+      setTimeout(next, 1400);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= questions.length) finish();
+    else render();
+  }
+
+  function finish() {
+    const ratio = correct / questions.length;
+    let stars = 1;
+    if (ratio >= 0.9) stars = 3;
+    else if (ratio >= 0.7) stars = 2;
+    recordGameScore(lessonId, 'listen', correct, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🌟' : stars === 2 ? '😊' : '💪',
+      title: stars >= 2 ? '聽辨力很棒！' : '再多聽幾次更厲害',
+      stars,
+      score: `答對 ${correct} / ${questions.length} 題`,
+      msg: stars >= 2 ? '耳朵超靈敏，繼續挑戰！' : '建議回去玩認讀字卡，多熟悉發音再來。',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 幸運轉盤 === */
+function buildWheel(area, lessonId, focus, pool) {
+  const segments = lesson_buildCardSet(focus, pool, 8);
+  const total = segments.length;
+  const colors = ['#FFB6D9', '#FFC857', '#7ED957', '#A6D9F7', '#B59FE2', '#FF8888', '#FFB088', '#88E5C7'];
+
+  let rotation = 0;
+  let spins = 0;
+  const targetSpins = 5;
+  const spoken = new Set();
+
+  function render() {
+    let segHtml = '';
+    const r = 170;
+    const cx = 170, cy = 170;
+    segments.forEach((s, i) => {
+      const start = (i / total) * 2 * Math.PI - Math.PI / 2;
+      const end = ((i + 1) / total) * 2 * Math.PI - Math.PI / 2;
+      const x1 = cx + r * Math.cos(start);
+      const y1 = cy + r * Math.sin(start);
+      const x2 = cx + r * Math.cos(end);
+      const y2 = cy + r * Math.sin(end);
+      const largeArc = end - start > Math.PI ? 1 : 0;
+      const path = `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z`;
+      const mid = (start + end) / 2;
+      const tx = cx + (r * 0.65) * Math.cos(mid);
+      const ty = cy + (r * 0.65) * Math.sin(mid);
+      segHtml += `<path d="${path}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="3"/>`;
+      const chars = [...s];
+      const lineH = chars.length > 1 ? 24 : 30;
+      const startY = ty - ((chars.length - 1) * lineH / 2) + lineH * 0.35;
+      const tspans = chars.map((c, ci) => `<tspan x="${tx}" y="${startY + ci * lineH}">${bopoDisplay(c)}</tspan>`).join('');
+      segHtml += `<text text-anchor="middle" fill="white" font-size="${lineH}" font-weight="bold">${tspans}</text>`;
+    });
+
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🎡 幸運轉盤</h2>
+        <div class="game-stats"><div class="stat-box">已轉 ${spins}/${targetSpins}</div></div>
+      </div>
+      <div class="wheel-container">
+        <div class="wheel-wrapper">
+          <div class="wheel-pointer"></div>
+          <svg class="wheel" id="wheel" viewBox="0 0 340 340">${segHtml}</svg>
+          <div class="wheel-center"></div>
+        </div>
+        <div id="wheel-result" style="font-size:24px;color:#444;margin:16px 0;min-height:36px;font-weight:bold;"></div>
+        <button class="ctrl-btn primary" id="spin-btn">🎯 轉動轉盤</button>
+        <p style="color:#888;margin-top:14px;font-size:14px;">轉到後先自己大聲念出來，再按「對答案」聽聽看！轉滿 ${targetSpins} 次完成</p>
+      </div>
+    `;
+
+    document.getElementById('spin-btn').onclick = spin;
+  }
+
+  function spin() {
+    if (spins >= targetSpins) return;
+    const btn = document.getElementById('spin-btn');
+    btn.disabled = true;
+    btn.textContent = '🌀 旋轉中...';
+    const target = Math.floor(Math.random() * total);
+    const anglePerSeg = 360 / total;
+    // 精準對齊：rotation mod 360 必須等於 desiredMod 才能讓 target 段中心對準 12 點(指針)。
+    // 用「絕對對齊 + 視覺多轉 4 圈」取代原本的累加(舊版累加會在第二次以後偏掉半段)。
+    const desiredMod = ((360 - target * anglePerSeg - anglePerSeg / 2) % 360 + 360) % 360;
+    const currentMod = ((rotation % 360) + 360) % 360;
+    let delta = desiredMod - currentMod;
+    if (delta <= 0) delta += 360; // 至少要往前轉一圈
+    const finalAngle = 360 * 5 + delta; // 5~6 圈視覺旋轉
+    rotation += finalAngle;
+    const wheel = document.getElementById('wheel');
+    wheel.style.transform = `rotate(${rotation}deg)`;
+    setTimeout(() => {
+      spins++;
+      spoken.add(segments[target]);
+      const data = PHONETIC_DATA[segments[target]] || {};
+      const sym = segments[target];
+      document.getElementById('wheel-result').innerHTML = `
+        <div style="display:inline-flex;align-items:center;gap:10px;justify-content:center;">
+          🎯 轉到了：${vbopo(sym)}
+          <span style="font-size:32px;">${data.emoji || ''}</span>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="ctrl-btn info" onclick="speakSymbol('${sym}')">🔊 對答案（按了才念）</button>
+        </div>
+      `;
+      // 不再自動念出——讓孩子先自己念，按了「對答案」才聽
+      area.querySelector('.stat-box').textContent = `已轉 ${spins}/${targetSpins}`;
+      btn.disabled = false;
+      btn.textContent = spins >= targetSpins ? '🏁 完成' : '🎯 再轉一次';
+      if (spins >= targetSpins) {
+        btn.onclick = finish;
+      }
+    }, 4100);
+  }
+
+  function finish() {
+    const stars = 3;
+    recordGameScore(lessonId, 'mix', spins, stars);
+    confetti();
+    showResult({
+      emoji: '🎉',
+      title: '轉盤遊戲完成！',
+      stars,
+      score: `成功轉了 ${spins} 次`,
+      msg: '每個轉到的注音都念出來了嗎？接著挑戰測驗看看吧！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 連連看 === */
+function buildConnect(area, lessonId, focus, pool) {
+  const num = 5;
+  const picks = lesson_buildCardSet(focus, pool, num).filter((v, i, a) => a.indexOf(v) === i).slice(0, num);
+  const left = shuffle(picks);
+  const right = shuffle(picks);
+  let selected = null;
+  let matched = 0;
+
+  function render() {
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🔗 連連看</h2>
+        <div class="game-stats"><div class="stat-box">${matched}/${picks.length}</div></div>
+      </div>
+      <p style="text-align:center;color:#666;margin-bottom:20px;">點注音再點對應的圖，把它們配對起來</p>
+      <div class="connect-area">
+        <div class="connect-col" id="col-left"></div>
+        <div class="connect-col" id="col-right"></div>
+      </div>
+    `;
+    const cl = document.getElementById('col-left');
+    left.forEach(sym => {
+      const d = document.createElement('div');
+      d.className = 'connect-item';
+      d.dataset.sym = sym;
+      d.dataset.side = 'L';
+      d.innerHTML = vbopo(sym);
+      d.onclick = () => pick(d);
+      cl.appendChild(d);
+    });
+    const cr = document.getElementById('col-right');
+    right.forEach(sym => {
+      const data = PHONETIC_DATA[sym] || {};
+      const d = document.createElement('div');
+      d.className = 'connect-item';
+      d.dataset.sym = sym;
+      d.dataset.side = 'R';
+      d.innerHTML = `<span class="emoji">${data.emoji || '❓'}</span> <span style="font-size:18px;color:#555;">${data.word || sym}</span>`;
+      d.onclick = () => pick(d);
+      cr.appendChild(d);
+    });
+  }
+
+  function pick(el) {
+    if (el.classList.contains('matched')) return;
+    if (selected && selected === el) {
+      el.classList.remove('selected');
+      selected = null;
+      return;
+    }
+    if (!selected) {
+      selected = el;
+      el.classList.add('selected');
+      speakSymbol(el.dataset.sym);
+    } else {
+      if (selected.dataset.side === el.dataset.side) {
+        selected.classList.remove('selected');
+        selected = el;
+        el.classList.add('selected');
+        speakSymbol(el.dataset.sym);
+        return;
+      }
+      if (selected.dataset.sym === el.dataset.sym) {
+        selected.classList.add('matched');
+        el.classList.add('matched');
+        selected.classList.remove('selected');
+        selected = null;
+        matched++;
+        area.querySelector('.stat-box').textContent = `${matched}/${picks.length}`;
+        if (matched === picks.length) {
+          setTimeout(finish, 600);
+        }
+      } else {
+        const a = selected, b = el;
+        a.classList.add('wrong');
+        b.classList.add('wrong');
+        setTimeout(() => {
+          a.classList.remove('wrong', 'selected');
+          b.classList.remove('wrong', 'selected');
+        }, 500);
+        selected = null;
+      }
+    }
+  }
+
+  function finish() {
+    const stars = 3;
+    recordGameScore(lessonId, 'mix', matched, stars);
+    confetti();
+    showResult({
+      emoji: '🌟', title: '連連看完成！', stars,
+      score: `全部 ${matched} 組配對成功`,
+      msg: '注音與圖像連結很棒！繼續挑戰測驗吧！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 分類籃 === */
+function buildSort(area, lessonId, focus, pool) {
+  // 依照系列分類
+  const categories = [
+    { name: 'ㄧ系', test: s => s.startsWith('ㄧ') && s.length > 1, color: '#FFB6D9' },
+    { name: 'ㄨ系', test: s => s.startsWith('ㄨ') && s.length > 1, color: '#A6D9F7' },
+    { name: 'ㄩ系', test: s => s.startsWith('ㄩ') && s.length > 1, color: '#B59FE2' },
+    { name: '聲符', test: s => s.length === 1 && 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ'.includes(s), color: '#FFC857' },
+    { name: '單韻', test: s => s.length === 1 && 'ㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩ'.includes(s), color: '#7ED957' },
+  ];
+
+  // 從 pool 找出有的類別
+  const usableCats = categories.filter(c => pool.some(p => c.test(p)));
+  // 選 8 個來分類，優先本堂
+  const items = lesson_buildCardSet(focus, pool, 8).filter((v, i, a) => a.indexOf(v) === i);
+  const placed = {};
+  usableCats.forEach(c => placed[c.name] = []);
+
+  function render() {
+    let basketsHtml = '';
+    usableCats.forEach(c => {
+      basketsHtml += `
+        <div class="basket" data-name="${c.name}" style="border-color:${c.color}">
+          <div class="basket-label" style="color:${c.color}">${c.name}</div>
+          <div class="basket-contents" id="basket-${c.name}"></div>
+        </div>
+      `;
+    });
+
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🧺 分類籃</h2>
+        <div class="game-stats"><div class="stat-box">已分類 ${countPlaced()}/${items.length}</div></div>
+      </div>
+      <p style="text-align:center;color:#666;margin-bottom:14px;">把下面的注音拖到正確的籃子裡（也可以點注音再點籃子）</p>
+      <div class="sort-area" id="symbols-area" style="text-align:center;"></div>
+      <div class="baskets">${basketsHtml}</div>
+    `;
+    const sa = document.getElementById('symbols-area');
+    items.forEach(s => {
+      const d = document.createElement('div');
+      d.className = 'draggable-symbol';
+      d.draggable = true;
+      d.dataset.sym = s;
+      d.innerHTML = vbopo(s);
+      d.ondragstart = e => { e.dataTransfer.setData('text/plain', s); };
+      d.onclick = () => {
+        if (d.classList.contains('placed')) return;
+        if (selected) selected.style.outline = '';
+        selected = d;
+        d.style.outline = '4px solid #ff6b9d';
+        speakSymbol(s);
+      };
+      sa.appendChild(d);
+    });
+
+    document.querySelectorAll('.basket').forEach(b => {
+      b.ondragover = e => { e.preventDefault(); b.classList.add('drag-over'); };
+      b.ondragleave = () => b.classList.remove('drag-over');
+      b.ondrop = e => {
+        e.preventDefault();
+        b.classList.remove('drag-over');
+        const sym = e.dataTransfer.getData('text/plain');
+        placeSymbol(sym, b.dataset.name);
+      };
+      b.onclick = () => {
+        if (selected) {
+          placeSymbol(selected.dataset.sym, b.dataset.name);
+          selected.style.outline = '';
+          selected = null;
+        }
+      };
+    });
+  }
+
+  let selected = null;
+  let correct = 0, wrong = 0;
+
+  function placeSymbol(sym, basketName) {
+    const item = items.find(i => i === sym);
+    if (!item) return;
+    const draggable = area.querySelector(`.draggable-symbol[data-sym="${sym}"]`);
+    if (!draggable || draggable.classList.contains('placed')) return;
+    const cat = usableCats.find(c => c.name === basketName);
+    const isCorrect = cat && cat.test(sym);
+
+    if (isCorrect) {
+      correct++;
+      draggable.classList.add('placed');
+      const span = document.createElement('div');
+      span.className = 'basket-item';
+      span.innerHTML = vbopo(sym);
+      document.getElementById(`basket-${basketName}`).appendChild(span);
+      area.querySelector('.stat-box').textContent = `已分類 ${countPlaced()}/${items.length}`;
+      if (countPlaced() === items.length) setTimeout(finish, 600);
+    } else {
+      wrong++;
+      const basket = area.querySelector(`.basket[data-name="${basketName}"]`);
+      basket.style.animation = 'shake 0.4s';
+      setTimeout(() => basket.style.animation = '', 500);
+    }
+  }
+
+  function countPlaced() { return area.querySelectorAll('.draggable-symbol.placed').length; }
+
+  function finish() {
+    const ratio = correct / (correct + wrong);
+    let stars = 1;
+    if (wrong === 0) stars = 3;
+    else if (ratio >= 0.7) stars = 2;
+    recordGameScore(lessonId, 'mix', correct, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars >= 2 ? '🎉' : '💪', title: '分類完成！', stars,
+      score: `對 ${correct} 次・錯 ${wrong} 次`,
+      msg: stars >= 2 ? '分類超清楚！繼續測驗挑戰！' : '再玩一次會更熟練喔。',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 迷宮 === */
+function buildMaze(area, lessonId, focus, pool) {
+  // 5x5 迷宮，從左上到右下；正確路徑放本堂注音，岔路放其他注音
+  const size = 5;
+  const target = focus[0] || pool[0];
+  // 規劃一條從 (0,0) 到 (size-1, size-1) 的隨機路徑
+  function makePath() {
+    let r = 0, c = 0;
+    const path = [[0, 0]];
+    while (r < size - 1 || c < size - 1) {
+      const moves = [];
+      if (r < size - 1) moves.push([1, 0]);
+      if (c < size - 1) moves.push([0, 1]);
+      const m = moves[Math.floor(Math.random() * moves.length)];
+      r += m[0]; c += m[1];
+      path.push([r, c]);
+    }
+    return path;
+  }
+  const path = makePath();
+  const pathSet = new Set(path.map(p => p.join(',')));
+
+  // 填格子
+  const grid = [];
+  const distractors = pool.filter(s => s !== target);
+  for (let r = 0; r < size; r++) {
+    const row = [];
+    for (let c = 0; c < size; c++) {
+      if (pathSet.has(r + ',' + c)) row.push(target);
+      else row.push(distractors[Math.floor(Math.random() * distractors.length)] || target);
+    }
+    grid.push(row);
+  }
+
+  let pos = [0, 0];
+  let mistakes = 0;
+  let completed = false;
+
+  function render() {
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">🧩 走迷宮：跟著 ${vbopo(target)} 走</h2>
+        <div class="game-stats"><div class="stat-box">錯誤 ${mistakes}</div></div>
+      </div>
+      <p style="text-align:center;color:#666;margin-bottom:14px;display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;">點旁邊（上下左右）的格子前進，只能踩在 ${vbopo(target)} 上面</p>
+      <div class="maze-grid" id="maze-grid" style="grid-template-columns:repeat(${size},1fr)"></div>
+      <p style="text-align:center;margin-top:14px;color:#888;">🟢 起點 🟡 終點（右下）</p>
+    `;
+    const mg = document.getElementById('maze-grid');
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'maze-cell';
+        cell.dataset.r = r; cell.dataset.c = c;
+        cell.innerHTML = vbopo(grid[r][c]);
+        if (r === 0 && c === 0) { cell.classList.add('start', 'current'); cell.innerHTML = '🏁'; }
+        else if (r === size - 1 && c === size - 1) { cell.classList.add('goal'); cell.innerHTML = '🏆'; }
+        cell.onclick = () => move(r, c, cell);
+        mg.appendChild(cell);
+      }
+    }
+  }
+
+  function move(r, c, cell) {
+    if (completed) return;
+    const [pr, pc] = pos;
+    if (Math.abs(r - pr) + Math.abs(c - pc) !== 1) return; // 只能走一格
+    if (cell.classList.contains('start')) return;
+
+    const sym = grid[r][c];
+    speakSymbol(sym);
+    if (sym !== target && !cell.classList.contains('goal')) {
+      mistakes++;
+      cell.style.background = '#FF8888';
+      cell.style.color = 'white';
+      setTimeout(() => {
+        cell.style.background = '';
+        cell.style.color = '';
+      }, 600);
+      area.querySelector('.stat-box').textContent = `錯誤 ${mistakes}`;
+      return;
+    }
+    // 移動
+    const prev = area.querySelector('.maze-cell.current');
+    if (prev) {
+      prev.classList.remove('current');
+      prev.classList.add('visited');
+    }
+    pos = [r, c];
+    cell.classList.add('current');
+    if (cell.classList.contains('goal')) {
+      completed = true;
+      setTimeout(finish, 600);
+    }
+  }
+
+  function finish() {
+    let stars = 3;
+    if (mistakes > 2) stars = 2;
+    if (mistakes > 5) stars = 1;
+    recordGameScore(lessonId, 'mix', mistakes, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🏆' : stars === 2 ? '😊' : '💪',
+      title: '走出迷宮了！',
+      stars,
+      score: `錯誤 ${mistakes} 次`,
+      msg: stars >= 2 ? '注音認得很清楚！繼續挑戰！' : '多認識注音再來迷宮就更輕鬆！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 聲調遊戲（第 22 堂） === */
+function buildTone(area, lessonId) {
+  const tones = [
+    { id: 1, name: '一聲', symbol: '一聲（平）', shape: '—', text: '平平的', class: 't1' },
+    { id: 2, name: '二聲', symbol: '二聲（揚）', shape: '／', text: '往上揚', class: 't2' },
+    { id: 3, name: '三聲', symbol: '三聲（轉）', shape: '∨', text: '先下再上', class: 't3' },
+    { id: 4, name: '四聲', symbol: '四聲（降）', shape: '＼', text: '往下降', class: 't4' },
+    { id: 5, name: '輕聲', symbol: '輕聲', shape: '•', text: '輕輕的', class: 't5' },
+  ];
+  const examples = [
+    { word: '媽', tone: 1 }, { word: '麻', tone: 2 }, { word: '馬', tone: 3 }, { word: '罵', tone: 4 }, { word: '嗎', tone: 5 },
+    { word: '湯', tone: 1 }, { word: '糖', tone: 2 }, { word: '躺', tone: 3 }, { word: '燙', tone: 4 },
+    { word: '哥', tone: 1 }, { word: '革', tone: 2 }, { word: '可', tone: 3 }, { word: '客', tone: 4 },
+  ];
+  const questions = shuffle(examples).slice(0, 8);
+  let idx = 0;
+  let correct = 0;
+
+  function render() {
+    const q = questions[idx];
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🎵 聲調挑戰</h2>
+        <div class="game-stats"><div class="stat-box">${idx+1}/${questions.length}</div><div class="stat-box">對 ${correct}</div></div>
+      </div>
+      <div class="quiz-question">
+        <h3>請聽這個字是第幾聲？</h3>
+        <div class="big-symbol" style="cursor:pointer;" onclick="speak('${q.word}')">${q.word} 🔊</div>
+      </div>
+      <div style="text-align:center;" id="tone-choices"></div>
+    `;
+    const tc = document.getElementById('tone-choices');
+    tones.forEach(t => {
+      const b = document.createElement('button');
+      b.className = `tone-shape ${t.class}`;
+      b.innerHTML = `${t.shape} <br>${t.symbol}`;
+      b.onclick = () => check(t.id, b, q);
+      tc.appendChild(b);
+    });
+    setTimeout(() => speak(q.word, 0.7), 400);
+  }
+
+  function check(tone, btn, q) {
+    if (tone === q.tone) {
+      btn.style.outline = '5px solid #7ED957';
+      correct++;
+      setTimeout(next, 800);
+    } else {
+      btn.style.outline = '5px solid #FF8888';
+      const correctBtn = [...area.querySelectorAll('.tone-shape')][q.tone - 1];
+      correctBtn.style.outline = '5px solid #7ED957';
+      setTimeout(next, 1500);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= questions.length) finish();
+    else render();
+  }
+
+  function finish() {
+    const ratio = correct / questions.length;
+    let stars = 1;
+    if (ratio >= 0.85) stars = 3;
+    else if (ratio >= 0.6) stars = 2;
+    recordGameScore(lessonId, 'mix', correct, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🌟' : stars === 2 ? '😊' : '💪',
+      title: '聲調挑戰完成！',
+      stars,
+      score: `答對 ${correct}/${questions.length} 題`,
+      msg: '聲調是中文很重要的部分，多多練習！',
+      lessonId,
+    });
+  }
+
+  render();
+}
+
+/* === 第 23 堂 蚊子歌與終極挑戰 === */
+function buildFinale(area, lessonId, pool) {
+  area.innerHTML = `
+    <div class="game-title-bar"><h2>🎤 蚊子歌唱讀＋終極挑戰</h2></div>
+    <div style="background:linear-gradient(135deg,#FFE5F1,#FFF9E5);border-radius:20px;padding:30px;text-align:center;">
+      <div style="font-size:60px;">🦟🎵</div>
+      <h3 style="color:#ff6b9d;margin:14px 0;">蚊子歌 (跟著唱)</h3>
+      <div style="line-height:2.6;font-size:24px;color:#555;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">小蚊子 嗡嗡嗡 ${vbopo('ㄨㄣ')} ${vbopo('ㄨㄣ')} ${vbopo('ㄨㄣ')}</div>
+        <div>飛來飛去 真討厭</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">${vbopo('ㄚ')} ${vbopo('ㄛ')} ${vbopo('ㄜ')} ${vbopo('ㄝ')} ${vbopo('ㄞ')} ${vbopo('ㄟ')} ${vbopo('ㄠ')} ${vbopo('ㄡ')}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">${vbopo('ㄢ')} ${vbopo('ㄣ')} ${vbopo('ㄤ')} ${vbopo('ㄥ')} ${vbopo('ㄦ')} 都會念</div>
+      </div>
+      <button class="ctrl-btn primary" style="margin-top:20px;" onclick="speak('小蚊子，嗡嗡嗡，ㄨㄣ ㄨㄣ ㄨㄣ。飛來飛去真討厭。ㄚ ㄛ ㄜ ㄝ ㄞ ㄟ ㄠ ㄡ ㄢ ㄣ ㄤ ㄥ ㄦ 都會念。', 0.7)">🔊 跟著唱</button>
+      <button class="ctrl-btn success" style="margin-top:20px;margin-left:8px;" onclick="startUltimate()">🏆 開始終極大魔王測驗</button>
+    </div>
+  `;
+  window.startUltimate = function() {
+    buildQuiz(area, lessonId, pool, pool, 15);
+  };
+}
+
+/* === 闖關測驗（10 題） === */
+function buildQuiz(area, lessonId, focus, pool, numQ) {
+  const totalQ = numQ || 10;
+  // 題目：60% 本堂、40% 舊
+  const newQuotient = Math.ceil(totalQ * 0.6);
+  const oldQuotient = totalQ - newQuotient;
+  const newQs = focus.length > 0 ? lesson_buildCardSet(focus, focus, newQuotient) : pickRandom(pool, newQuotient);
+  const oldOnly = pool.filter(s => !focus.includes(s));
+  const oldQs = pickRandom(oldOnly.length > 0 ? oldOnly : pool, oldQuotient);
+  const questionTargets = shuffle([...newQs, ...oldQs]);
+
+  // 隨機題型：看字選音(audio)、聽音選字、看字選圖
+  const questions = questionTargets.map(target => {
+    const types = ['listen2sym', 'sym2img', 'sym2speak'];
+    const t = types[Math.floor(Math.random() * types.length)];
+    const distractors = pickRandom(pool.filter(s => s !== target), 3);
+    const choices = shuffle([target, ...distractors]);
+    return { target, type: t, choices };
+  });
+
+  let idx = 0;
+  let correct = 0;
+  const startTime = Date.now();
+
+  function render() {
+    const q = questions[idx];
+    const target = q.target;
+    const data = PHONETIC_DATA[target] || {};
+
+    let questionHtml = '';
+    if (q.type === 'listen2sym') {
+      questionHtml = `
+        <h3>👂 聽發音，選出正確的注音</h3>
+        <div class="speaker-big" style="width:120px;height:120px;line-height:120px;font-size:60px;" onclick="speakSymbol('${target}')">🔊</div>
+      `;
+    } else if (q.type === 'sym2img') {
+      questionHtml = `
+        <h3>🖼️ 這個注音對應哪個東西？</h3>
+        <div class="big-symbol">${vbopo(target)}</div>
+      `;
+    } else if (q.type === 'sym2speak') {
+      questionHtml = `
+        <h3>🗣️ 這個注音念什麼？</h3>
+        <div class="big-symbol">${vbopo(target)}</div>
+        <p style="color:#888;margin-top:10px;">念出來後再選擇</p>
+      `;
+    }
+
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🏆 闖關測驗</h2>
+        <div class="game-stats">
+          <div class="stat-box">${idx+1}/${totalQ}</div>
+          <div class="stat-box">對 ${correct}</div>
+        </div>
+      </div>
+      <div class="quiz-progress"><div class="quiz-progress-fill" style="width:${((idx)/totalQ)*100}%"></div></div>
+      <div class="quiz-area">
+        <div class="quiz-question">${questionHtml}</div>
+        <div id="quiz-choices"></div>
+      </div>
+    `;
+
+    const cc = document.getElementById('quiz-choices');
+    if (q.type === 'sym2img') {
+      cc.className = 'choices-grid';
+      cc.style.maxWidth = '600px';
+      cc.style.margin = '0 auto';
+      q.choices.forEach(sym => {
+        const d = PHONETIC_DATA[sym] || {};
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.dataset.sym = sym;
+        btn.innerHTML = `<div style="font-size:50px;">${d.emoji || '❓'}</div><div style="font-size:18px;color:#555;margin-top:6px;">${d.word || sym}</div>`;
+        btn.onclick = () => answer(sym, btn, target);
+        cc.appendChild(btn);
+      });
+    } else {
+      cc.className = 'choices-grid';
+      cc.style.maxWidth = '600px';
+      cc.style.margin = '0 auto';
+      q.choices.forEach(sym => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.dataset.sym = sym;
+        btn.innerHTML = vbopo(sym);
+        btn.onclick = () => answer(sym, btn, target);
+        cc.appendChild(btn);
+      });
+    }
+
+    if (q.type === 'listen2sym') {
+      setTimeout(() => speakSymbol(target), 400);
+    } else if (q.type === 'sym2speak') {
+      setTimeout(() => speakSymbol(target), 600);
+    }
+  }
+
+  function answer(sym, btn, target) {
+    const all = area.querySelectorAll('.choice-btn');
+    all.forEach(b => b.classList.add('disabled'));
+    if (sym === target) {
+      btn.classList.add('correct');
+      correct++;
+      setTimeout(next, 700);
+    } else {
+      btn.classList.add('wrong');
+      all.forEach(b => {
+        if (b.dataset.sym === target) b.classList.add('correct');
+      });
+      speakSymbol(target);
+      setTimeout(next, 1500);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= totalQ) finish();
+    else render();
+  }
+
+  function finish() {
+    const ratio = correct / totalQ;
+    let stars = 1;
+    if (ratio >= 0.9) stars = 3;
+    else if (ratio >= 0.7) stars = 2;
+    recordGameScore(lessonId, 'quiz', correct, stars);
+    const passed = stars >= 2;
+    if (passed) confetti();
+    showResult({
+      emoji: stars === 3 ? '🏆' : stars === 2 ? '🌟' : '💪',
+      title: stars === 3 ? '滿分通過！太厲害了！' : stars === 2 ? '通過測驗！' : '差一點點，再加油！',
+      stars,
+      score: `答對 ${correct} / ${totalQ} 題`,
+      msg: passed
+        ? '恭喜通過！可以挑戰下一堂的內容囉！'
+        : '建議回去玩「認讀字卡」「聽音點點看」多熟悉，再來測驗一次喔！',
+      lessonId,
+      retry: !passed,
+    });
+  }
+
+  render();
+}
+
+/* === 結果 Modal === */
+function showResult({ emoji, title, stars, score, msg, lessonId, retry }) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="emoji-big">${emoji}</div>
+      <h2>${title}</h2>
+      <div class="stars-result">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+      <div class="score-text">${score}</div>
+      <div class="modal-msg">${msg}</div>
+      <div class="modal-buttons">
+        <button class="ctrl-btn primary" onclick="this.closest('.modal-bg').remove(); goLesson(${lessonId});">📋 回課堂選單</button>
+        ${retry ? `<button class="ctrl-btn success" onclick="this.closest('.modal-bg').remove(); goHome();">🏠 回首頁</button>` : `<button class="ctrl-btn info" onclick="this.closest('.modal-bg').remove(); goHome();">🏠 回首頁</button>`}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+/* ========================================
+   啟動
+   ======================================== */
+goHome();
+</script>
+
+</body>
+</html>

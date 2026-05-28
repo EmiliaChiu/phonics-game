@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>注音打地鼠 🐰</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    overflow-x: hidden; overflow-y: auto;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 40%, #98D8A1 60%, #7BC97F 100%);
+    background-attachment: fixed;
+    user-select: none;
+  }
+  /* 雲朵裝飾（固定在視窗，不隨內容捲動） */
+  .cloud {
+    position: fixed; background: white; border-radius: 50%;
+    opacity: 0.85; pointer-events: none; z-index: 1;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute; background: white; border-radius: 50%;
+  }
+  .cloud1 { width: 80px; height: 30px; top: 4%; left: 8%; animation: floatCloud 30s linear infinite; }
+  .cloud1::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+  .cloud1::after { width: 50px; height: 50px; top: -25px; left: 35px; }
+  .cloud2 { width: 100px; height: 35px; top: 10%; right: 10%; animation: floatCloud 40s linear infinite reverse; }
+  .cloud2::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+  .cloud2::after { width: 55px; height: 55px; top: -30px; left: 45px; }
+  @keyframes floatCloud {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(40px); }
+    100% { transform: translateX(0); }
+  }
+
+  /* 太陽 */
+  .sun {
+    position: fixed; top: 3%; right: 3%;
+    width: clamp(40px, 6vw, 70px); height: clamp(40px, 6vw, 70px);
+    background: radial-gradient(circle, #FFE066, #FFB700);
+    border-radius: 50%; box-shadow: 0 0 40px rgba(255,200,0,0.6);
+    animation: sunPulse 3s ease-in-out infinite; pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes sunPulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* 畫面容器：採用流式排版，內容多時可捲動 */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    width: 100%;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px;
+    position: relative; z-index: 2;
+  }
+  .screen.active { display: flex; }
+  #screen-game.active {
+    justify-content: flex-start;
+    padding-top: 12px;
+  }
+
+  /* 開始畫面 */
+  #screen-start h1 {
+    font-size: clamp(36px, 7vw, 72px);
+    color: #fff; margin: 0 0 8px;
+    text-shadow: 4px 4px 0 #FF6B9D, 8px 8px 20px rgba(0,0,0,0.2);
+    animation: bounce 2s ease-in-out infinite;
+  }
+  #screen-start .subtitle {
+    font-size: clamp(16px, 2.5vw, 24px);
+    color: #fff; margin-bottom: 20px;
+    text-shadow: 2px 2px 0 #FF6B9D;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .start-animals {
+    font-size: clamp(44px, 8vw, 88px);
+    margin-bottom: 20px; letter-spacing: 8px;
+    animation: wiggle 2s ease-in-out infinite;
+  }
+  @keyframes wiggle {
+    0%,100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+  .mode-btns { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .mode-btn {
+    padding: 14px 28px; font-size: clamp(18px, 2.5vw, 24px);
+    font-weight: bold; border: none; border-radius: 22px;
+    cursor: pointer; color: white;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.15);
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-family: inherit;
+    line-height: 1.2;
+  }
+  .mode-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.2), 0 3px 10px rgba(0,0,0,0.15);
+  }
+  .mode-learn { background: linear-gradient(180deg, #FFB6D9, #FF6B9D); }
+  .mode-play { background: linear-gradient(180deg, #66D9A6, #2FB97C); }
+  .mode-easy { background: linear-gradient(180deg, #9DD9FF, #4BAEEA); }
+
+  /* 遊戲畫面 */
+  .game-header {
+    width: 100%; max-width: 720px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; background: rgba(255,255,255,0.85);
+    border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    margin-bottom: 6px; flex-wrap: wrap; gap: 8px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center;
+    font-size: 12px; color: #666; min-width: 60px;
+    line-height: 1.1;
+  }
+  .stat-value {
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: bold; color: #333;
+  }
+  .target-display {
+    background: linear-gradient(180deg, #FFE066, #FFB700);
+    padding: 4px 16px; border-radius: 14px;
+    box-shadow: 0 4px 0 #D89400;
+    text-align: center;
+  }
+  .target-display .stat-value {
+    font-size: clamp(30px, 5vw, 48px);
+    color: #B5651D; line-height: 1;
+  }
+  .target-display .stat {
+    color: #8B4513; font-weight: bold;
+  }
+
+  .target-pulse { animation: targetPulse 0.8s ease-in-out infinite; }
+  @keyframes targetPulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* 地鼠網格：限制高度以避免被視窗截掉 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(8px, 1.5vw, 20px);
+    width: 100%;
+    max-width: min(560px, 92vw, calc(100vh - 180px));
+    margin: 8px auto;
+  }
+  .hole {
+    aspect-ratio: 1 / 1;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center bottom, #5C3317 0%, #3E2114 70%);
+    border-radius: 50% 50% 45% 45% / 35% 35% 50% 50%;
+    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.4),
+                inset 0 10px 20px rgba(0,0,0,0.5),
+                0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  .hole::before {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30%;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.4));
+    border-radius: 0 0 45% 45% / 0 0 50% 50%;
+    pointer-events: none; z-index: 5;
+  }
+  .mole {
+    position: absolute; bottom: -100%; left: 50%;
+    transform: translateX(-50%);
+    width: 80%; height: 90%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: bottom 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .mole.up {
+    bottom: 5%;
+    pointer-events: auto;
+  }
+  .mole.hit {
+    bottom: 5%;
+    animation: hitBounce 0.4s ease-out forwards;
+  }
+  .mole.miss {
+    animation: missShake 0.4s ease-in-out;
+  }
+  @keyframes hitBounce {
+    0% { transform: translateX(-50%) scale(1); }
+    40% { transform: translateX(-50%) scale(1.25) rotate(8deg); }
+    100% { transform: translateX(-50%) scale(0) rotate(360deg); opacity: 0; }
+  }
+  @keyframes missShake {
+    0%,100% { transform: translateX(-50%); }
+    25% { transform: translateX(calc(-50% - 8px)); }
+    75% { transform: translateX(calc(-50% + 8px)); }
+  }
+  .animal {
+    font-size: clamp(40px, 7vw, 70px);
+    line-height: 1;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,0.3));
+  }
+  .bpm-label {
+    font-size: clamp(20px, 3.5vw, 32px);
+    font-weight: bold; color: #fff;
+    background: linear-gradient(180deg, #FF6B9D, #E0397B);
+    padding: 4px 14px; border-radius: 12px;
+    margin-top: -8px;
+    box-shadow: 0 3px 0 #B82B62, 0 4px 8px rgba(0,0,0,0.2);
+    border: 2px solid white;
+    min-width: 50px; text-align: center;
+  }
+
+  /* 分數彈出 */
+  .score-pop {
+    position: absolute; font-size: 32px; font-weight: bold;
+    color: #FFD700; text-shadow: 2px 2px 0 #B8860B;
+    pointer-events: none; z-index: 100;
+    animation: scorePop 0.8s ease-out forwards;
+  }
+  .score-pop.miss { color: #FF4444; text-shadow: 2px 2px 0 #800; }
+  @keyframes scorePop {
+    0% { transform: translate(-50%, 0) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -80px) scale(1.5); opacity: 0; }
+  }
+
+  /* 星星粒子 */
+  .star {
+    position: absolute; font-size: 24px; pointer-events: none; z-index: 99;
+    animation: starFly 0.7s ease-out forwards;
+  }
+  @keyframes starFly {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+  }
+
+  /* 結束畫面 */
+  #screen-end h1 {
+    font-size: clamp(40px, 7vw, 60px);
+    color: #fff; text-shadow: 4px 4px 0 #FF6B9D;
+    margin-bottom: 10px;
+  }
+  .final-score {
+    font-size: clamp(60px, 10vw, 100px);
+    font-weight: bold; color: #FFD700;
+    text-shadow: 4px 4px 0 #B8860B, 6px 6px 20px rgba(0,0,0,0.3);
+    margin: 20px 0;
+    animation: bounce 1.5s ease-in-out infinite;
+  }
+  .praise {
+    font-size: clamp(22px, 3.5vw, 32px);
+    color: white; margin-bottom: 30px;
+    text-shadow: 2px 2px 0 #FF6B9D;
+  }
+  .end-btns { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  /* 暫停按鈕 */
+  .pause-btn {
+    background: rgba(255,255,255,0.85); border: none;
+    width: 44px; height: 44px; border-radius: 50%; font-size: 20px;
+    cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  .pause-btn:active { transform: scale(0.9); }
+
+  /* 暫停遮罩 */
+  .pause-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+  .pause-overlay.active { display: flex; }
+  .pause-card {
+    background: white; border-radius: 30px;
+    padding: 40px 50px; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .pause-card h2 { margin-top: 0; color: #FF6B9D; font-size: 36px; }
+
+  /* 倒數開始動畫 */
+  .countdown {
+    position: fixed; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    font-size: clamp(120px, 25vw, 200px);
+    font-weight: bold; color: white;
+    text-shadow: 6px 6px 0 #FF6B9D, 10px 10px 30px rgba(0,0,0,0.3);
+    z-index: 999; pointer-events: none;
+    animation: countdownPop 1s ease-out forwards;
+  }
+  @keyframes countdownPop {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
+  }
+
+  /* 反饋 emoji */
+  .feedback {
+    position: fixed; top: 30%; left: 50%;
+    transform: translateX(-50%);
+    font-size: 100px; pointer-events: none; z-index: 998;
+    animation: feedbackPop 0.8s ease-out forwards;
+  }
+  @keyframes feedbackPop {
+    0% { transform: translateX(-50%) scale(0); opacity: 0; }
+    50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1) translateY(-50px); opacity: 0; }
+  }
+
+  /* 音效切換 */
+  .sound-toggle, .voice-toggle {
+    position: fixed; z-index: 50;
+    background: rgba(255,255,255,0.85); border: none;
+    height: 40px; border-radius: 20px;
+    font-size: 14px; cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    padding: 0 12px; font-family: inherit;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .sound-toggle { top: 10px; left: 10px; width: 40px; padding: 0; justify-content: center; font-size: 18px; }
+  .voice-toggle { top: 10px; left: 60px; }
+  .voice-toggle.online { background: rgba(180, 230, 255, 0.95); }
+  .voice-toggle.offline { background: rgba(255, 230, 180, 0.95); }
+  .speech-toggle { top: 56px; left: 10px; }
+  .speech-toggle.bopomofo { background: rgba(200, 230, 200, 0.95); }
+  .speech-toggle.character { background: rgba(230, 210, 240, 0.95); }
+
+  /* 學習模式提示 */
+  .learn-hint {
+    background: rgba(255,255,255,0.85);
+    padding: 8px 20px; border-radius: 15px;
+    color: #444; font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+</style>
+</head>
+<body>
+
+<!-- 背景裝飾 -->
+<div class="cloud cloud1"></div>
+<div class="cloud cloud2"></div>
+<div class="sun"></div>
+
+<!-- 音效開關 -->
+<button class="sound-toggle" id="soundToggle" aria-label="音效">🔊</button>
+<button class="voice-toggle offline" id="voiceToggle" aria-label="切換語音來源">💻 內建發音</button>
+<button class="voice-toggle speech-toggle character" id="speechToggle" aria-label="切換發音方式">🈯 代字模式</button>
+
+<!-- 開始畫面 -->
+<div class="screen active" id="screen-start">
+  <div class="start-animals">🐰🐹🐱</div>
+  <h1>注音打地鼠</h1>
+  <div class="subtitle">點點看可愛的小動物，學注音！</div>
+  <div class="mode-btns">
+    <button class="mode-btn mode-learn" data-mode="learn">📚 學習模式</button>
+    <button class="mode-btn mode-easy" data-mode="easy">⭐ 簡單挑戰<br><span style="font-size:0.6em">60秒・無扣分</span></button>
+    <button class="mode-btn mode-play" data-mode="play">🏆 挑戰模式<br><span style="font-size:0.6em">60秒・答錯-2</span></button>
+  </div>
+  <button class="mode-btn mode-easy" id="previewAllBtn" style="margin-top:14px;">🎵 聽全部 37 個音</button>
+  <div id="previewStatus" style="color:#fff;text-shadow:1px 1px 0 #FF6B9D;margin-top:10px;font-size:18px;min-height:24px;"></div>
+  <div id="localAudioHint" style="color:#fff;text-shadow:1px 1px 0 #FF6B9D;margin-top:6px;font-size:16px;min-height:20px;"></div>
+</div>
+
+<!-- 遊戲畫面 -->
+<div class="screen" id="screen-game">
+  <div class="game-header">
+    <div class="stat" id="statTime">
+      <div>時間 ⏰</div>
+      <div class="stat-value" id="timeValue">60</div>
+    </div>
+    <div class="target-display" id="targetDisplay">
+      <div class="stat">點擊這個</div>
+      <div class="stat-value" id="targetValue">ㄅ</div>
+    </div>
+    <div class="stat">
+      <div>分數 ⭐</div>
+      <div class="stat-value" id="scoreValue">0</div>
+    </div>
+    <button class="pause-btn" id="pauseBtn" aria-label="暫停">⏸️</button>
+  </div>
+  <div class="grid" id="grid">
+    <!-- 9 個地鼠洞 -->
+  </div>
+  <div id="learnHint" class="learn-hint" style="display:none;margin-top:8px;">點點看每個小動物學發音 🎵</div>
+</div>
+
+<!-- 結束畫面 -->
+<div class="screen" id="screen-end">
+  <h1 id="endTitle">時間到！</h1>
+  <div class="praise" id="praiseText">你好棒！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="end-btns">
+    <button class="mode-btn mode-play" id="playAgainBtn">🔁 再玩一次</button>
+    <button class="mode-btn mode-learn" id="backHomeBtn">🏠 回到首頁</button>
+  </div>
+</div>
+
+<!-- 暫停遮罩 -->
+<div class="pause-overlay" id="pauseOverlay">
+  <div class="pause-card">
+    <h2>休息一下 ⏸️</h2>
+    <button class="mode-btn mode-play" id="resumeBtn">▶️ 繼續</button>
+    <button class="mode-btn mode-learn" id="quitBtn" style="margin-top:15px;">🏠 回首頁</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =========================
+   注音資料：37 個符號
+   每個有：symbol, char(發音用代字), pinyin(備援拼音)
+   ========================= */
+// s = 注音符號（顯示用）
+// c = 代表字（傳給 TTS 念出來的字串，預設模式）
+// t = 注音直讀字串（替代模式，部分 TTS 引擎可用）
+// 用兩字詞「強制」TTS 念出標準的第一字音，比單字穩定許多
+// c = 顯示用代表字 / t = 傳給 TTS 的字串
+// 對於 TTS 處理 bopomofo 注音不穩定的符號（聲母+ㄛ/ㄜ 組合、單一捲舌音、單一介音），
+// 改用「波、坡」這類穩定的單一中文字；其他符號維持注音直讀
+const BOPOMOFO = [
+  // 聲母 21
+  { s: 'ㄅ', c: '玻', t: '波' },  // bō - 用「波」一聲
+  { s: 'ㄆ', c: '坡', t: '坡' },  // pō
+  { s: 'ㄇ', c: '摸', t: '摸' },  // mō
+  { s: 'ㄈ', c: '佛', t: '佛' },  // fó (沒有合適一聲字)
+  { s: 'ㄉ', c: '得', t: '得' },  // dé
+  { s: 'ㄊ', c: '特', t: '特' },  // tè
+  { s: 'ㄋ', c: '訥', t: 'ㄋㄜ' },
+  { s: 'ㄌ', c: '勒', t: 'ㄌㄜ' },
+  { s: 'ㄍ', c: '哥', t: 'ㄍㄜ' },
+  { s: 'ㄎ', c: '科', t: 'ㄎㄜ' },
+  { s: 'ㄏ', c: '喝', t: 'ㄏㄜ' },
+  { s: 'ㄐ', c: '基', t: 'ㄐㄧ' },
+  { s: 'ㄑ', c: '欺', t: 'ㄑㄧ' },
+  { s: 'ㄒ', c: '希', t: 'ㄒㄧ' },
+  { s: 'ㄓ', c: '知', t: '知' },  // zhī - 單獨 ㄓ 不穩
+  { s: 'ㄔ', c: '吃', t: '吃' },  // chī
+  { s: 'ㄕ', c: '詩', t: '詩' },  // shī
+  { s: 'ㄖ', c: '日', t: '日' },  // rì
+  { s: 'ㄗ', c: '資', t: '資' },  // zī
+  { s: 'ㄘ', c: '雌', t: '雌' },  // cī
+  { s: 'ㄙ', c: '思', t: '思' },  // sī
+  // 介母 3
+  { s: 'ㄧ', c: '衣', t: 'ㄧ' },
+  { s: 'ㄨ', c: '烏', t: 'ㄨ' },
+  { s: 'ㄩ', c: '迂', t: 'ㄩ' },
+  // 韻母 13
+  { s: 'ㄚ', c: '啊', t: 'ㄚ' },
+  { s: 'ㄛ', c: '喔', t: 'ㄛ' },
+  { s: 'ㄜ', c: '鵝', t: 'ㄜ' },
+  { s: 'ㄝ', c: '耶', t: '耶' },  // 單獨 ㄝ 不穩，改用「耶」
+  { s: 'ㄞ', c: '哀', t: 'ㄞ' },
+  { s: 'ㄟ', c: '誒', t: 'ㄟ' },
+  { s: 'ㄠ', c: '凹', t: '凹' },  // 單獨 ㄠ 不穩，改用「凹」
+  { s: 'ㄡ', c: '歐', t: 'ㄡ' },
+  { s: 'ㄢ', c: '安', t: 'ㄢ' },
+  { s: 'ㄣ', c: '恩', t: 'ㄣ' },
+  { s: 'ㄤ', c: '骯', t: 'ㄤ' },
+  { s: 'ㄥ', c: '鞥', t: 'ㄥ' },
+  { s: 'ㄦ', c: '兒', t: 'ㄦ' }
+];
+
+const ANIMALS = ['🐰','🐹','🐱','🐭','🦊','🐶','🐻','🐼','🐨','🐸','🐮','🐷','🐔','🐧'];
+
+const PRAISES = [
+  '太厲害了！', '你真是天才！', '好棒喔！', '繼續加油！',
+  '好厲害！', '哇～好強！', '注音小達人！', '完美！'
+];
+
+/* =========================
+   遊戲狀態
+   ========================= */
+const state = {
+  mode: null,           // 'learn' | 'easy' | 'play'
+  score: 0,
+  timeLeft: 60,
+  target: null,         // 當前目標 BOPOMOFO 物件
+  moles: [],            // 9 個 hole 的狀態 [{ up, data, animal, timer }]
+  running: false,
+  paused: false,
+  spawnTimer: null,
+  countdownTimer: null,
+  soundOn: true,
+  voicesReady: false
+};
+
+/* =========================
+   音效（Google Translate TTS + Web Speech API + Web Audio）
+   優先使用線上 TTS（音質佳），失敗時退回瀏覽器內建語音
+   ========================= */
+let synth = window.speechSynthesis;
+let cachedVoice = null;
+let currentAudio = null;
+let useOnlineTTS = false;  // 預設使用瀏覽器內建（使用者反映較準確）
+let onlineTTSFailed = false;
+
+// 本機音檔對應表（最高優先級 - 若檔案存在就使用真人錄音）
+// 把音檔放在 audio/ 資料夾，命名為「ㄅ.mp3」、「ㄆ.mp3」…
+// 支援格式：mp3、ogg、wav、m4a
+const LOCAL_AUDIO_EXISTS = {}; // { 'ㄅ': 'audio/ㄅ.mp3', ... }
+const AUDIO_EXTS = ['mp3', 'webm', 'ogg', 'wav', 'm4a'];
+
+function checkLocalAudio() {
+  // 用 Audio 元素直接探測（file:// 也能用，不需 fetch）
+  const bpmList = (typeof BOPOMOFO !== 'undefined') ? BOPOMOFO : [];
+  let pending = bpmList.length * AUDIO_EXTS.length;
+  let resolved = 0;
+
+  function updateHint() {
+    const found = Object.keys(LOCAL_AUDIO_EXISTS).length;
+    const hint = document.getElementById('localAudioHint');
+    if (hint) {
+      if (found > 0) hint.textContent = `🎵 已啟用本機音檔（${found}/37）`;
+      else hint.textContent = '';
+    }
+  }
+
+  function tryLoad(item, exts, idx) {
+    if (idx >= exts.length) return;
+    if (LOCAL_AUDIO_EXISTS[item.s]) return;
+    const url = `audio/${item.s}.${exts[idx]}`;
+    const a = new Audio();
+    let done = false;
+    const onOk = () => {
+      if (done) return; done = true;
+      LOCAL_AUDIO_EXISTS[item.s] = url;
+      updateHint();
+    };
+    const onFail = () => {
+      if (done) return; done = true;
+      tryLoad(item, exts, idx + 1);
+    };
+    a.addEventListener('canplaythrough', onOk, { once: true });
+    a.addEventListener('loadedmetadata', onOk, { once: true });
+    a.addEventListener('error', onFail, { once: true });
+    a.preload = 'metadata';
+    a.src = url;
+    // 5 秒沒結果就放棄
+    setTimeout(() => { if (!done) onFail(); }, 5000);
+  }
+
+  for (const item of bpmList) {
+    tryLoad(item, AUDIO_EXTS, 0);
+  }
+  // 1 秒後再更新一次顯示，給檔案時間載入
+  setTimeout(updateHint, 1500);
+  setTimeout(updateHint, 3000);
+}
+
+function playLocalAudio(item) {
+  const url = LOCAL_AUDIO_EXISTS[item.s];
+  if (!url) return false;
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio.src = ''; }
+    currentAudio = new Audio(url);
+    currentAudio.volume = 1.0;
+    currentAudio.play().catch(() => {});
+    return true;
+  } catch (e) { return false; }
+}
+let speechMode = 'character'; // 'character' | 'bopomofo'  預設用代字（兩字詞），多數 TTS 較穩
+
+function pickChineseVoice() {
+  if (!synth) return null;
+  const voices = synth.getVoices();
+  if (!voices || voices.length === 0) return null;
+  // 嚴格偏好台灣國語
+  const tiers = [
+    // 第一優先：明確的 zh-TW
+    v => /zh-?TW/i.test(v.lang) || /zh-?Hant-?TW/i.test(v.lang),
+    // 第二優先：包含台灣常見語音名稱
+    v => /Hsiao|HsiaoChen|Yating|Meijia|MeiJia/i.test(v.name),
+    // 第三優先：zh-Hant（繁體）
+    v => /zh-?Hant/i.test(v.lang),
+    // 最後：任何中文
+    v => /^zh/i.test(v.lang) || /Chinese|Mandarin/i.test(v.name)
+  ];
+  for (const test of tiers) {
+    const v = voices.find(test);
+    if (v) return v;
+  }
+  return voices[0];
+}
+
+function speakViaGoogle(item) {
+  return new Promise((resolve, reject) => {
+    try {
+      // Google Translate 公開 TTS 端點，台灣中文音質清楚
+      const text = (speechMode === 'bopomofo' ? item.t : item.c) || item.c;
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=zh-TW&client=tw-ob&ttsspeed=0.9`;
+      if (currentAudio) {
+        try { currentAudio.pause(); currentAudio.src = ''; } catch(e) {}
+      }
+      const audio = new Audio(url);
+      audio.volume = 1.0;
+      currentAudio = audio;
+      let settled = false;
+      audio.addEventListener('playing', () => { settled = true; resolve(); }, { once: true });
+      audio.addEventListener('ended', () => resolve(), { once: true });
+      audio.addEventListener('error', () => { if (!settled) reject(new Error('audio error')); }, { once: true });
+      const playPromise = audio.play();
+      if (playPromise && playPromise.catch) playPromise.catch(reject);
+      // 2 秒後若沒開始播放就視為失敗
+      setTimeout(() => { if (!settled) reject(new Error('timeout')); }, 2500);
+    } catch(e) { reject(e); }
+  });
+}
+
+function speakViaBrowser(item) {
+  if (!synth) return;
+  try { synth.cancel(); } catch(e) {}
+  // 預設用「注音直讀」模式 - 把帶聲調的注音字串交給 TTS
+  // 失敗或使用者切換時用代字
+  const text = (speechMode === 'bopomofo' && item.t) ? item.t : item.c;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'zh-TW';
+  utt.rate = 0.7;       // 慢一點讓孩子聽清楚
+  utt.pitch = 1.15;     // 稍微高音聽起來活潑
+  utt.volume = 1.0;
+  // 每次重新挑選語音以防語音清單後來才載入
+  const v = pickChineseVoice();
+  if (v) { utt.voice = v; cachedVoice = v; }
+  synth.speak(utt);
+}
+
+function speakBopomofo(item) {
+  if (!state.soundOn) return;
+  // 第一優先：本機音檔（真人錄音）
+  if (playLocalAudio(item)) return;
+  // 第二優先：線上 TTS
+  if (useOnlineTTS && !onlineTTSFailed) {
+    speakViaGoogle(item).catch(() => {
+      onlineTTSFailed = true;
+      speakViaBrowser(item);
+    });
+  } else {
+    // 第三優先：瀏覽器內建 TTS
+    speakViaBrowser(item);
+  }
+}
+
+// Web Audio：音效（叮、噗）
+let audioCtx = null;
+function ac() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { return null; }
+  }
+  return audioCtx;
+}
+function playTone(freqs, dur=0.15, type='sine', vol=0.2) {
+  if (!state.soundOn) return;
+  const ctx = ac(); if (!ctx) return;
+  const t0 = ctx.currentTime;
+  freqs.forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = f;
+    osc.connect(gain); gain.connect(ctx.destination);
+    const start = t0 + i * dur * 0.6;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(vol, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    osc.start(start);
+    osc.stop(start + dur);
+  });
+}
+function sfxCorrect() { playTone([523.25, 659.25, 783.99], 0.18, 'sine', 0.25); }
+function sfxWrong()   { playTone([220, 180], 0.2, 'square', 0.15); }
+function sfxTick()    { playTone([800], 0.05, 'sine', 0.1); }
+function sfxEnd()     { playTone([523, 659, 784, 1047], 0.25, 'triangle', 0.25); }
+
+/* =========================
+   隨機工具
+   ========================= */
+function randInt(n) { return Math.floor(Math.random() * n); }
+function pick(arr) { return arr[randInt(arr.length)]; }
+function pickDifferent(arr, current) {
+  if (arr.length <= 1) return arr[0];
+  let n = pick(arr);
+  let tries = 0;
+  while (n === current && tries < 10) { n = pick(arr); tries++; }
+  return n;
+}
+function randomAnimal() { return pick(ANIMALS); }
+
+/* =========================
+   遊戲流程
+   ========================= */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startMode(mode) {
+  // 解鎖音訊（必須在使用者點擊事件中）
+  ac();
+  if (synth) {
+    try {
+      const w = new SpeechSynthesisUtterance(' ');
+      w.volume = 0; synth.speak(w);
+    } catch(e) {}
+  }
+  state.mode = mode;
+  state.score = 0;
+  state.timeLeft = mode === 'learn' ? 9999 : 60;
+  state.running = false;
+  state.paused = false;
+  buildGrid();
+  showScreen('screen-game');
+  // 學習模式 UI
+  document.getElementById('learnHint').style.display = mode === 'learn' ? 'block' : 'none';
+  document.getElementById('targetDisplay').style.display = mode === 'learn' ? 'none' : 'block';
+  document.getElementById('statTime').style.display = mode === 'learn' ? 'none' : 'flex';
+
+  if (mode === 'learn') {
+    // 學習模式：所有地鼠常駐，每個顯示不同注音，點擊發音
+    populateLearnMode();
+  } else {
+    // 倒數321開始
+    countdownStart(() => {
+      state.running = true;
+      pickNewTarget();
+      updateHUD();
+      scheduleSpawn();
+      gameTick();
+    });
+  }
+}
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  state.moles = [];
+  for (let i = 0; i < 9; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    const mole = document.createElement('div');
+    mole.className = 'mole';
+    mole.innerHTML = `<div class="animal">🐰</div><div class="bpm-label">ㄅ</div>`;
+    hole.appendChild(mole);
+    hole.addEventListener('click', () => onMoleClick(i));
+    grid.appendChild(hole);
+    state.moles.push({ hole, mole, up: false, data: null, animal: '🐰', timer: null });
+  }
+}
+
+function populateLearnMode() {
+  // 學習模式：在 9 個洞輪流顯示不同注音
+  state.learnIndex = 0;
+  state.learnList = [...BOPOMOFO];
+  // 洗牌
+  for (let i = state.learnList.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [state.learnList[i], state.learnList[j]] = [state.learnList[j], state.learnList[i]];
+  }
+  refillLearn();
+}
+
+function refillLearn() {
+  for (let i = 0; i < 9; i++) {
+    const m = state.moles[i];
+    const data = state.learnList[(state.learnIndex + i) % state.learnList.length];
+    showMole(i, data, randomAnimal(), 99999);
+  }
+  state.learnIndex = (state.learnIndex + 9) % state.learnList.length;
+}
+
+function pickNewTarget() {
+  state.target = pickDifferent(BOPOMOFO, state.target);
+  const tv = document.getElementById('targetValue');
+  tv.textContent = state.target.s;
+  // 念出目標
+  speakBopomofo(state.target);
+  // 加脈動效果
+  tv.parentElement.classList.add('target-pulse');
+  setTimeout(() => tv.parentElement.classList.remove('target-pulse'), 1500);
+}
+
+function showMole(idx, data, animal, lifeMs) {
+  const m = state.moles[idx];
+  if (m.timer) { clearTimeout(m.timer); m.timer = null; }
+  m.data = data;
+  m.animal = animal;
+  m.up = true;
+  m.mole.classList.remove('hit', 'miss');
+  m.mole.querySelector('.animal').textContent = animal;
+  m.mole.querySelector('.bpm-label').textContent = data.s;
+  // 強制 reflow 以重啟動畫
+  void m.mole.offsetWidth;
+  m.mole.classList.add('up');
+  if (lifeMs < 99999) {
+    m.timer = setTimeout(() => hideMole(idx), lifeMs);
+  }
+}
+
+function hideMole(idx) {
+  const m = state.moles[idx];
+  if (m.timer) { clearTimeout(m.timer); m.timer = null; }
+  m.up = false;
+  m.mole.classList.remove('up');
+}
+
+function scheduleSpawn() {
+  if (!state.running || state.paused) return;
+  // 速度依時間調整：剛開始慢，後面快
+  const elapsed = 60 - state.timeLeft;
+  const baseInterval = Math.max(550, 1100 - elapsed * 8);
+  state.spawnTimer = setTimeout(() => {
+    spawnMoles();
+    scheduleSpawn();
+  }, baseInterval);
+}
+
+function spawnMoles() {
+  if (!state.running || state.paused) return;
+
+  // 計算目前場上有目標 / 共幾個
+  const upMoles = state.moles.filter(m => m.up);
+  const hasTarget = upMoles.some(m => m.data && m.data.s === state.target.s);
+
+  // 場上維持 2~4 個
+  const desired = 2 + randInt(3);
+  const upCount = upMoles.length;
+
+  // 找空閒的洞
+  const freeIdx = [];
+  state.moles.forEach((m, i) => { if (!m.up) freeIdx.push(i); });
+  // 洗牌
+  for (let i = freeIdx.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [freeIdx[i], freeIdx[j]] = [freeIdx[j], freeIdx[i]];
+  }
+
+  let toSpawn = Math.max(0, desired - upCount);
+  if (toSpawn === 0 && !hasTarget && freeIdx.length > 0) toSpawn = 1;
+
+  let placedTarget = hasTarget;
+
+  for (let k = 0; k < toSpawn && k < freeIdx.length; k++) {
+    const idx = freeIdx[k];
+    let data;
+    if (!placedTarget) {
+      data = state.target;
+      placedTarget = true;
+    } else {
+      // 隨機注音，但不要重複場上已有的（盡量）
+      const existing = new Set(state.moles.filter(m => m.up).map(m => m.data && m.data.s));
+      let tries = 0;
+      do {
+        data = pick(BOPOMOFO);
+        tries++;
+      } while (existing.has(data.s) && tries < 8);
+    }
+    const life = 1500 + randInt(1500); // 1.5~3 秒
+    showMole(idx, data, randomAnimal(), life);
+  }
+}
+
+function onMoleClick(idx) {
+  const m = state.moles[idx];
+  if (!m.up || !m.data) return;
+
+  if (state.mode === 'learn') {
+    // 學習模式：發音、換動物
+    speakBopomofo(m.data);
+    sfxCorrect();
+    starsBurst(m.hole);
+    // 換另一個注音（從清單抓下一個）
+    setTimeout(() => {
+      const next = pick(BOPOMOFO);
+      showMole(idx, next, randomAnimal(), 99999);
+    }, 300);
+    return;
+  }
+
+  if (!state.running || state.paused) return;
+
+  if (m.data.s === state.target.s) {
+    // 答對！
+    state.score += 10;
+    speakBopomofo(m.data);
+    sfxCorrect();
+    showScorePop(m.hole, '+10');
+    starsBurst(m.hole);
+    showFeedback(pick(['🎉','⭐','✨','💯','👍']));
+    m.mole.classList.add('hit');
+    setTimeout(() => hideMole(idx), 400);
+    updateHUD();
+    // 換新目標
+    setTimeout(() => pickNewTarget(), 800);
+  } else {
+    // 答錯
+    if (state.mode === 'play') {
+      state.score = Math.max(0, state.score - 2);
+      showScorePop(m.hole, '-2', true);
+    } else {
+      // 簡單模式不扣分但給回饋
+      showScorePop(m.hole, '加油!', true);
+    }
+    sfxWrong();
+    speakBopomofo(m.data); // 仍然念出該注音，學到對應
+    m.mole.classList.add('miss');
+    setTimeout(() => m.mole.classList.remove('miss'), 400);
+    updateHUD();
+  }
+}
+
+function showScorePop(hole, text, isMiss) {
+  const rect = hole.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'score-pop' + (isMiss ? ' miss' : '');
+  pop.textContent = text;
+  pop.style.left = (rect.left + rect.width / 2) + 'px';
+  pop.style.top = (rect.top + rect.height / 2) + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 800);
+}
+
+function starsBurst(hole) {
+  const rect = hole.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const stars = ['⭐','✨','🌟','💫'];
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = pick(stars);
+    s.style.left = cx + 'px';
+    s.style.top = cy + 'px';
+    const angle = (Math.PI * 2 * i) / 8;
+    const dist = 60 + randInt(40);
+    s.style.setProperty('--tx', `calc(-50% + ${Math.cos(angle) * dist}px)`);
+    s.style.setProperty('--ty', `calc(-50% + ${Math.sin(angle) * dist}px)`);
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 700);
+  }
+}
+
+function showFeedback(emoji) {
+  const f = document.createElement('div');
+  f.className = 'feedback';
+  f.textContent = emoji;
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 800);
+}
+
+function updateHUD() {
+  document.getElementById('scoreValue').textContent = state.score;
+  document.getElementById('timeValue').textContent = state.timeLeft;
+}
+
+function gameTick() {
+  if (!state.running) return;
+  if (state.paused) {
+    setTimeout(gameTick, 200);
+    return;
+  }
+  state.timeLeft--;
+  updateHUD();
+  if (state.timeLeft <= 5 && state.timeLeft > 0) sfxTick();
+  if (state.timeLeft <= 0) {
+    endGame();
+    return;
+  }
+  setTimeout(gameTick, 1000);
+}
+
+function endGame() {
+  state.running = false;
+  if (state.spawnTimer) { clearTimeout(state.spawnTimer); state.spawnTimer = null; }
+  state.moles.forEach((m, i) => hideMole(i));
+  sfxEnd();
+  document.getElementById('finalScore').textContent = state.score;
+  let praise;
+  if (state.score >= 150) praise = '🏆 注音超人！';
+  else if (state.score >= 100) praise = '🌟 太厲害了！';
+  else if (state.score >= 60) praise = '👍 你很棒！';
+  else if (state.score >= 30) praise = '🙂 繼續加油！';
+  else praise = '💪 再試一次！';
+  document.getElementById('praiseText').textContent = praise;
+  setTimeout(() => showScreen('screen-end'), 600);
+}
+
+function countdownStart(after) {
+  let n = 3;
+  const fire = () => {
+    if (n === 0) {
+      const el = document.createElement('div');
+      el.className = 'countdown';
+      el.textContent = 'GO!';
+      el.style.color = '#FFD700';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 900);
+      after();
+      return;
+    }
+    const el = document.createElement('div');
+    el.className = 'countdown';
+    el.textContent = n;
+    document.body.appendChild(el);
+    sfxTick();
+    setTimeout(() => el.remove(), 900);
+    n--;
+    setTimeout(fire, 900);
+  };
+  fire();
+}
+
+/* =========================
+   暫停 / 結束按鈕
+   ========================= */
+function togglePause() {
+  if (!state.running) return;
+  state.paused = !state.paused;
+  document.getElementById('pauseOverlay').classList.toggle('active', state.paused);
+}
+
+function quitToHome() {
+  state.running = false;
+  state.paused = false;
+  if (state.spawnTimer) { clearTimeout(state.spawnTimer); state.spawnTimer = null; }
+  document.getElementById('pauseOverlay').classList.remove('active');
+  state.moles.forEach((m, i) => hideMole(i));
+  showScreen('screen-start');
+}
+
+/* =========================
+   事件繫結
+   ========================= */
+document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => startMode(btn.dataset.mode));
+});
+
+// 一鍵聽完 37 個注音的發音（用於檢查 TTS 是否正確）
+let previewing = false;
+document.getElementById('previewAllBtn').addEventListener('click', async () => {
+  if (previewing) {
+    previewing = false;
+    document.getElementById('previewStatus').textContent = '已停止';
+    if (synth) try { synth.cancel(); } catch(e) {}
+    if (currentAudio) try { currentAudio.pause(); } catch(e) {}
+    return;
+  }
+  previewing = true;
+  ac(); // 解鎖音訊
+  const status = document.getElementById('previewStatus');
+  for (let i = 0; i < BOPOMOFO.length; i++) {
+    if (!previewing) break;
+    const item = BOPOMOFO[i];
+    status.textContent = `${i+1}/37  ${item.s}（${item.c}）`;
+    speakBopomofo(item);
+    await new Promise(r => setTimeout(r, 1400));
+  }
+  if (previewing) status.textContent = '✅ 已念完全部 37 個';
+  previewing = false;
+});
+document.getElementById('pauseBtn').addEventListener('click', togglePause);
+document.getElementById('resumeBtn').addEventListener('click', togglePause);
+document.getElementById('quitBtn').addEventListener('click', quitToHome);
+document.getElementById('playAgainBtn').addEventListener('click', () => startMode(state.mode || 'easy'));
+document.getElementById('backHomeBtn').addEventListener('click', () => showScreen('screen-start'));
+
+document.getElementById('soundToggle').addEventListener('click', () => {
+  state.soundOn = !state.soundOn;
+  document.getElementById('soundToggle').textContent = state.soundOn ? '🔊' : '🔇';
+  if (!state.soundOn) {
+    if (synth) try { synth.cancel(); } catch(e) {}
+    if (currentAudio) try { currentAudio.pause(); } catch(e) {}
+  }
+});
+
+document.getElementById('voiceToggle').addEventListener('click', () => {
+  useOnlineTTS = !useOnlineTTS;
+  onlineTTSFailed = false; // 重置失敗狀態，允許重試
+  const btn = document.getElementById('voiceToggle');
+  if (useOnlineTTS) {
+    btn.textContent = '🌐 線上發音';
+    btn.classList.remove('offline'); btn.classList.add('online');
+  } else {
+    btn.textContent = '💻 內建發音';
+    btn.classList.remove('online'); btn.classList.add('offline');
+  }
+});
+
+document.getElementById('speechToggle').addEventListener('click', () => {
+  speechMode = (speechMode === 'bopomofo') ? 'character' : 'bopomofo';
+  const btn = document.getElementById('speechToggle');
+  if (speechMode === 'bopomofo') {
+    btn.textContent = '🅰 注音直讀';
+    btn.classList.remove('character'); btn.classList.add('bopomofo');
+  } else {
+    btn.textContent = '🈯 代字模式';
+    btn.classList.remove('bopomofo'); btn.classList.add('character');
+  }
+});
+
+// 防止頁面被空白鍵滾動 / 增加鍵盤支援
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.running) togglePause();
+});
+
+// 載入語音清單（有些瀏覽器是非同步）
+if (synth) {
+  cachedVoice = pickChineseVoice();
+  synth.addEventListener && synth.addEventListener('voiceschanged', () => {
+    cachedVoice = pickChineseVoice();
+    state.voicesReady = true;
+  });
+}
+
+// 防止行動裝置誤觸縮放
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+
+// 啟動時檢查本機音檔
+checkLocalAudio();
+</script>
+</body>
+</html>
