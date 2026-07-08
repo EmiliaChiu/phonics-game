@@ -656,6 +656,7 @@ const LESSONS = [
   { id: 21, date: '7/29', day: '三', title: '單韻 ㄥㄏ補強', newContent: ['ㄥ', 'ㄏ'] },
   { id: 22, date: '7/30', day: '四', title: '聲調 一二三四五聲', newContent: [], special: 'tone' },
   { id: 23, date: '7/31', day: '五', title: '蚊子歌與總複習', newContent: [], special: 'finale' },
+  { id: 24, date: '8/3', day: '一', title: '總複習', newContent: [], special: 'graduation' },
 ];
 
 /* 取得某堂課的累加題庫 */
@@ -929,6 +930,7 @@ function getMixGameType(lessonId) {
   const lesson = LESSONS[lessonId - 1];
   if (lesson.special === 'tone') return 'tone';
   if (lesson.special === 'finale') return 'finale';
+  if (lesson.special === 'graduation') return 'graduation';
   const types = ['sequence', 'connect', 'combine'];
   return types[(lessonId - 1) % types.length];
 }
@@ -969,7 +971,7 @@ function renderHome() {
         <h2>🎉 歡迎來到正音闖關樂園 🎉</h2>
         <p>跟著進度一堂一堂玩，每堂5種遊戲等你挑戰！</p>
         <div style="margin-top:14px;font-size:14px;">
-          已完成 <strong>${completed}</strong> 堂 ・ 進行中 <strong>${inProgress}</strong> 堂 ・ 共 23 堂
+          已完成 <strong>${completed}</strong> 堂 ・ 進行中 <strong>${inProgress}</strong> 堂 ・ 共 <strong>${LESSONS.length}</strong> 堂
         </div>
         <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
       </div>
@@ -1076,6 +1078,7 @@ function renderGame(lessonId, gameId) {
     else if (type === 'combine') buildCombine(area, lessonId, focus, pool);
     else if (type === 'tone') buildTone(area, lessonId);
     else if (type === 'finale') buildFinale(area, lessonId, pool);
+    else if (type === 'graduation') buildGraduation(area, lessonId, pool);
   }
   else if (gameId === 'quiz') buildQuiz(area, lessonId, focus, pool);
   else if (gameId === 'review') buildReview(area, lessonId, focus, pool);
@@ -1767,7 +1770,7 @@ function buildTone(area, lessonId) {
       </div>
       <div class="quiz-question">
         <h3>請聽這個字是第幾聲？</h3>
-        <div class="big-symbol" style="cursor:pointer;" onclick="speak('${q.word}')">${q.word} 🔊</div>
+        <div class="big-symbol" style="cursor:pointer;" onclick="speak('${q.word}', 0.85)">${q.word} 🔊</div>
       </div>
       <div style="text-align:center;" id="tone-choices"></div>
     `;
@@ -1779,7 +1782,7 @@ function buildTone(area, lessonId) {
       b.onclick = () => check(t.id, b, q);
       tc.appendChild(b);
     });
-    setTimeout(() => speak(q.word, 0.7), 400);
+    setTimeout(() => speak(q.word, 0.85), 400);
   }
 
   function check(tone, btn, q) {
@@ -1841,6 +1844,249 @@ function buildFinale(area, lessonId, pool) {
   window.startUltimate = function() {
     buildQuiz(area, lessonId, pool, pool, 15);
   };
+}
+
+/* === 第 24 堂 總複習：拼音大會考 + 聲調大會考 兩階段 === */
+const GRADUATION_TONE_WORDS = [
+  { word: '媽', tone: 1 }, { word: '麻', tone: 2 }, { word: '馬', tone: 3 }, { word: '罵', tone: 4 }, { word: '嗎', tone: 5 },
+  { word: '湯', tone: 1 }, { word: '糖', tone: 2 }, { word: '躺', tone: 3 }, { word: '燙', tone: 4 },
+  { word: '哥', tone: 1 }, { word: '革', tone: 2 }, { word: '可', tone: 3 }, { word: '客', tone: 4 },
+  { word: '天', tone: 1 }, { word: '田', tone: 2 }, { word: '舔', tone: 3 }, { word: '電', tone: 4 },
+  { word: '風', tone: 1 }, { word: '房', tone: 2 }, { word: '訪', tone: 3 }, { word: '放', tone: 4 },
+  { word: '出', tone: 1 }, { word: '除', tone: 2 }, { word: '楚', tone: 3 }, { word: '觸', tone: 4 },
+  { word: '書', tone: 1 }, { word: '熟', tone: 2 }, { word: '鼠', tone: 3 }, { word: '樹', tone: 4 },
+];
+
+function buildGraduation(area, lessonId, pool) {
+  const tones = [
+    { id: 1, name: '一聲', symbol: '一聲（平）', shape: '—', class: 't1' },
+    { id: 2, name: '二聲', symbol: '二聲（揚）', shape: '／', class: 't2' },
+    { id: 3, name: '三聲', symbol: '三聲（轉）', shape: '∨', class: 't3' },
+    { id: 4, name: '四聲', symbol: '四聲（降）', shape: '＼', class: 't4' },
+    { id: 5, name: '輕聲', symbol: '輕聲', shape: '•', class: 't5' },
+  ];
+
+  // 拼音大會考的題庫：跟拼讀組合遊戲同一套邏輯，但用全部23堂的完整題庫
+  const consonants = pool.filter(isConsonantSym);
+  const singleFinals = pool.filter(s => s.length === 1 && !isConsonantSym(s));
+  const fusedCombos = pool.filter(s => s.length > 1).map(s => {
+    const chars = [...s];
+    return { initial: chars[0], final: chars.slice(1).join(''), full: s, mode: 'fused' };
+  });
+  const seqCombos = [];
+  consonants.forEach(c => {
+    singleFinals.forEach(f => {
+      const full = c + f;
+      if (COMBO_SPEECH[full]) seqCombos.push({ initial: c, final: f, full, mode: 'sequential' });
+    });
+  });
+  const comboList = [...fusedCombos, ...seqCombos];
+  const allInitials = [...new Set(comboList.map(c => c.initial))];
+  const allFinals = [...new Set(comboList.map(c => c.final))];
+  const comboQuestions = shuffle(comboList).slice(0, 10);
+  const toneQuestions = shuffle(GRADUATION_TONE_WORDS).slice(0, 8);
+  const totalQ = comboQuestions.length + toneQuestions.length;
+
+  let phase = 'combine';
+  let cIdx = 0, tIdx = 0, correct = 0;
+  let pickedInitial = null, pickedFinal = null;
+  let comboTimers = [];
+  function clearComboTimers() {
+    comboTimers.forEach(id => clearTimeout(id));
+    comboTimers = [];
+  }
+
+  function progressLabel() {
+    const done = phase === 'combine' ? cIdx : comboQuestions.length + tIdx;
+    return `${done + 1}/${totalQ}`;
+  }
+
+  function renderCombine() {
+    const q = comboQuestions[cIdx];
+    const iChoices = shuffle([q.initial, ...pickRandom(allInitials.filter(x => x !== q.initial), Math.min(3, allInitials.length - 1))]);
+    const fChoices = shuffle([q.final, ...pickRandom(allFinals.filter(x => x !== q.final), Math.min(3, allFinals.length - 1))]);
+    pickedInitial = null; pickedFinal = null;
+
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🎓 總複習・拼音大會考</h2>
+        <div class="game-stats"><div class="stat-box">${progressLabel()}</div><div class="stat-box">對 ${correct}</div></div>
+      </div>
+      <p style="text-align:center;color:#666;margin-bottom:10px;font-size:16px;">先點一個「聲符」再點一個「韻符」，拼出聽到的音</p>
+      <div style="text-align:center;margin-bottom:20px;">
+        <button class="ctrl-btn info" id="combine-play-btn">🔊 聽一次</button>
+        <div id="combine-preview" style="font-size:32px;color:#ff6b9d;font-weight:bold;margin-top:10px;min-height:44px;">？ ？</div>
+      </div>
+      <div style="text-align:center;color:#b8860b;font-weight:bold;margin-bottom:6px;">聲符</div>
+      <div class="choices-grid" id="combine-initial" style="margin-bottom:18px;"></div>
+      <div style="text-align:center;color:#4a90e2;font-weight:bold;margin-bottom:6px;">韻符</div>
+      <div class="choices-grid" id="combine-final"></div>
+    `;
+
+    const ic = document.getElementById('combine-initial');
+    iChoices.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.dataset.sym = sym;
+      btn.innerHTML = vbopo(sym);
+      btn.onclick = () => pickInitial(sym, btn);
+      ic.appendChild(btn);
+    });
+    const fc = document.getElementById('combine-final');
+    fChoices.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.dataset.sym = sym;
+      btn.innerHTML = vbopo(sym);
+      btn.onclick = () => pickFinal(sym, btn);
+      fc.appendChild(btn);
+    });
+
+    document.getElementById('combine-play-btn').onclick = () => playCombo(q);
+    setTimeout(() => playCombo(q), 400);
+  }
+
+  function playCombo(q) {
+    clearComboTimers();
+    if (q.mode === 'fused') speakSymbol(q.full);
+    else {
+      speakSymbol(q.initial);
+      comboTimers.push(setTimeout(() => speakSymbol(q.final), 1000));
+      comboTimers.push(setTimeout(() => speak(COMBO_SPEECH[q.full] || q.full), 2400));
+    }
+  }
+
+  function pickInitial(sym, btn) {
+    if (pickedInitial) return;
+    pickedInitial = sym;
+    document.querySelectorAll('#combine-initial .choice-btn').forEach(b => b.classList.add('disabled'));
+    btn.style.outline = '4px solid #ff6b9d';
+    updatePreview();
+    checkCombineReady();
+  }
+  function pickFinal(sym, btn) {
+    if (pickedFinal) return;
+    pickedFinal = sym;
+    document.querySelectorAll('#combine-final .choice-btn').forEach(b => b.classList.add('disabled'));
+    btn.style.outline = '4px solid #4a90e2';
+    updatePreview();
+    checkCombineReady();
+  }
+  function updatePreview() {
+    document.getElementById('combine-preview').innerHTML =
+      `${pickedInitial ? vbopo(pickedInitial) : '？'} ${pickedFinal ? vbopo(pickedFinal) : '？'}`;
+  }
+
+  function checkCombineReady() {
+    if (!pickedInitial || !pickedFinal) return;
+    const q = comboQuestions[cIdx];
+    const isRight = pickedInitial === q.initial && pickedFinal === q.final;
+    const initBtns = document.querySelectorAll('#combine-initial .choice-btn');
+    const finalBtns = document.querySelectorAll('#combine-final .choice-btn');
+
+    if (isRight) {
+      initBtns.forEach(b => { if (b.dataset.sym === q.initial) b.classList.add('correct'); });
+      finalBtns.forEach(b => { if (b.dataset.sym === q.final) b.classList.add('correct'); });
+      correct++;
+      clearWrongAnswer(q.initial);
+      clearWrongAnswer(q.final);
+      playCombo(q);
+    } else {
+      initBtns.forEach(b => {
+        if (b.dataset.sym === q.initial) b.classList.add('correct');
+        else if (b.dataset.sym === pickedInitial) b.classList.add('wrong');
+      });
+      finalBtns.forEach(b => {
+        if (b.dataset.sym === q.final) b.classList.add('correct');
+        else if (b.dataset.sym === pickedFinal) b.classList.add('wrong');
+      });
+      recordWrongAnswer(q.initial);
+      recordWrongAnswer(q.final);
+    }
+    if (isRight) setTimeout(nextCombine, q.mode === 'sequential' ? 3300 : 1500);
+    else setTimeout(nextCombine, 1600);
+  }
+
+  function nextCombine() {
+    clearComboTimers();
+    cIdx++;
+    if (cIdx >= comboQuestions.length) startTonePhase();
+    else renderCombine();
+  }
+
+  function startTonePhase() {
+    phase = 'tone';
+    area.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="font-size:56px;">🎵</div>
+        <h2 style="color:#ff6b9d;margin:14px 0;">拼音關過了！接下來挑戰聲調大會考</h2>
+        <div style="font-size:18px;color:#888;">目前答對 ${correct} 題</div>
+      </div>
+    `;
+    setTimeout(renderTone, 1400);
+  }
+
+  function renderTone() {
+    const q = toneQuestions[tIdx];
+    area.innerHTML = `
+      <div class="game-title-bar">
+        <h2>🎓 總複習・聲調大會考</h2>
+        <div class="game-stats"><div class="stat-box">${progressLabel()}</div><div class="stat-box">對 ${correct}</div></div>
+      </div>
+      <div class="quiz-question">
+        <h3>請聽這個字是第幾聲？</h3>
+        <div class="big-symbol" style="cursor:pointer;" onclick="speak('${q.word}', 0.85)">${q.word} 🔊</div>
+      </div>
+      <div style="text-align:center;" id="tone-choices"></div>
+    `;
+    const tc = document.getElementById('tone-choices');
+    tones.forEach(t => {
+      const b = document.createElement('button');
+      b.className = `tone-shape ${t.class}`;
+      b.innerHTML = `${t.shape} <br>${t.symbol}`;
+      b.onclick = () => checkTone(t.id, b, q);
+      tc.appendChild(b);
+    });
+    setTimeout(() => speak(q.word, 0.85), 400);
+  }
+
+  function checkTone(toneId, btn, q) {
+    if (toneId === q.tone) {
+      btn.style.outline = '5px solid #7ED957';
+      correct++;
+      setTimeout(nextTone, 800);
+    } else {
+      btn.style.outline = '5px solid #FF8888';
+      const correctBtn = [...area.querySelectorAll('.tone-shape')][q.tone - 1];
+      correctBtn.style.outline = '5px solid #7ED957';
+      setTimeout(nextTone, 1500);
+    }
+  }
+
+  function nextTone() {
+    tIdx++;
+    if (tIdx >= toneQuestions.length) finish();
+    else renderTone();
+  }
+
+  function finish() {
+    const ratio = correct / totalQ;
+    let stars = 1;
+    if (ratio >= 0.85) stars = 3;
+    else if (ratio >= 0.6) stars = 2;
+    recordGameScore(lessonId, 'mix', correct, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🎓' : stars === 2 ? '😊' : '💪',
+      title: stars >= 2 ? '總複習過關，畢業了！' : '再多練習一下，很快就會了',
+      stars,
+      score: `答對 ${correct}/${totalQ} 題（拼音＋聲調）`,
+      msg: '23堂的注音符號都複習完了，你真的很棒！',
+      lessonId,
+    });
+  }
+
+  renderCombine();
 }
 
 /* === 闖關測驗（10 題） === */
