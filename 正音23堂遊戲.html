@@ -467,12 +467,99 @@
   .tone-shape.t4 { background: #FF8888; }
   .tone-shape.t5 { background: #B59FE2; }
 
+  /* 結合韻大轉盤：21個結合韻文字固定不轉，只有中間的指針會轉動 */
+  .wheel-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 20px;
+  }
+  .wheel-ring {
+    position: relative;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #FFF6FA 55%, #FFE0EE 100%);
+    border: 6px dashed #FFB6D9;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  }
+  .wheel-chip {
+    position: absolute; top: 50%; left: 50%;
+    width: 56px; min-height: 60px; margin: -30px 0 0 -28px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: bold; font-size: 19px; line-height: 1.05;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    transition: box-shadow 0.25s;
+  }
+  .wheel-chip.selected {
+    box-shadow: 0 0 0 5px white, 0 0 0 9px #ff6b9d, 0 8px 18px rgba(0,0,0,0.3);
+    z-index: 20;
+  }
+  .wheel-needle {
+    position: absolute; bottom: 50%; left: 50%;
+    width: 8px; height: 132px;
+    background: #ff6b9d; border-radius: 4px;
+    transform-origin: 50% 100%;
+    transform: translateX(-50%) rotate(0deg);
+    transition: transform 3s cubic-bezier(0.17, 0.67, 0.2, 1);
+    z-index: 15;
+  }
+  .wheel-needle::before {
+    content: ''; position: absolute; top: -12px; left: 50%;
+    transform: translateX(-50%);
+    border-left: 9px solid transparent; border-right: 9px solid transparent;
+    border-bottom: 16px solid #ff6b9d;
+  }
+  .wheel-ring::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: white; transform: translate(-50%, -50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 16;
+  }
+  .wheel-judge {
+    display: flex; gap: 14px; margin-top: 20px; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* 翻牌總複習 */
+  .cardflip-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 20px;
+  }
+  .cardflip-stack { position: relative; width: 200px; height: 280px; }
+  .cardflip-behind {
+    position: absolute; inset: 0; border-radius: 20px;
+    background: linear-gradient(135deg, #FFB6D9, #FFC8E1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  }
+  .cardflip-card {
+    position: absolute; inset: 0;
+    perspective: 1000px; cursor: pointer;
+  }
+  .cardflip-inner {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.6s; transform-style: preserve-3d;
+  }
+  .cardflip-card.flipped .cardflip-inner { transform: rotateY(180deg); }
+  .cardflip-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+  }
+  .cardflip-front {
+    background: repeating-linear-gradient(45deg, #ff6b9d 0, #ff6b9d 10px, #FFB6D9 10px, #FFB6D9 20px);
+    border: 6px solid white;
+  }
+  .cardflip-back {
+    background: white; border: 6px solid #FFB6D9;
+    transform: rotateY(180deg);
+    font-size: 64px; color: #ff6b9d; font-weight: bold; line-height: 1;
+  }
+
   /* Responsive */
   @media (max-width: 600px) {
     .memory-grid { grid-template-columns: repeat(3, 1fr); }
     .flashcard { padding: 30px 40px; min-width: 200px; min-height: 220px; }
     .flashcard .symbol { font-size: 80px; }
     .topbar h1 { font-size: 18px; }
+    .wheel-ring { transform: scale(0.72); transform-origin: center top; margin-bottom: -80px; }
   }
 </style>
 </head>
@@ -655,8 +742,7 @@ const LESSONS = [
   { id: 20, date: '7/28', day: '二', title: '單韻 ㄝㄟㄡ', newContent: ['ㄝ', 'ㄟ', 'ㄡ'] },
   { id: 21, date: '7/29', day: '三', title: '單韻 ㄥㄏ補強', newContent: ['ㄥ', 'ㄏ'] },
   { id: 22, date: '7/30', day: '四', title: '聲調 一二三四五聲', newContent: [], special: 'tone' },
-  { id: 23, date: '7/31', day: '五', title: '蚊子歌與總複習', newContent: [], special: 'finale' },
-  { id: 24, date: '8/3', day: '一', title: '總複習', newContent: [], special: 'graduation' },
+  { id: 23, date: '7/31', day: '五', title: '總複習', newContent: [], special: 'graduation' },
 ];
 
 /* 取得某堂課的累加題庫 */
@@ -929,8 +1015,7 @@ const GAME_CATEGORIES = [
 function getMixGameType(lessonId) {
   const lesson = LESSONS[lessonId - 1];
   if (lesson.special === 'tone') return 'tone';
-  if (lesson.special === 'finale') return 'finale';
-  if (lesson.special === 'graduation') return 'graduation';
+  if (lesson.special === 'graduation') return 'wheel';
   const types = ['sequence', 'connect', 'combine'];
   return types[(lessonId - 1) % types.length];
 }
@@ -1068,7 +1153,10 @@ function renderGame(lessonId, gameId) {
 
   const area = document.getElementById('game-area');
 
-  if (gameId === 'flashcard') buildFlashcard(area, lessonId, focus, pool);
+  if (gameId === 'flashcard') {
+    if (lesson.special === 'graduation') buildCardFlip(area, lessonId, pool);
+    else buildFlashcard(area, lessonId, focus, pool);
+  }
   else if (gameId === 'memory') buildMemory(area, lessonId, focus, pool);
   else if (gameId === 'listen') buildListen(area, lessonId, focus, pool);
   else if (gameId === 'mix') {
@@ -1077,10 +1165,12 @@ function renderGame(lessonId, gameId) {
     else if (type === 'connect') buildConnect(area, lessonId, focus, pool);
     else if (type === 'combine') buildCombine(area, lessonId, focus, pool);
     else if (type === 'tone') buildTone(area, lessonId);
-    else if (type === 'finale') buildFinale(area, lessonId, pool);
-    else if (type === 'graduation') buildGraduation(area, lessonId, pool);
+    else if (type === 'wheel') buildWheel(area, lessonId);
   }
-  else if (gameId === 'quiz') buildQuiz(area, lessonId, focus, pool);
+  else if (gameId === 'quiz') {
+    if (lesson.special === 'graduation') buildGraduation(area, lessonId, pool);
+    else buildQuiz(area, lessonId, focus, pool);
+  }
   else if (gameId === 'review') buildReview(area, lessonId, focus, pool);
 }
 
@@ -1135,6 +1225,93 @@ function buildFlashcard(area, lessonId, focus, pool) {
   }
 
   render();
+}
+
+/* === 總複習堂：翻牌總複習（取代標準認讀字卡欄位）===
+   玩法：牌堆蓋著，按牌堆翻開一張，顯示大大的注音符號，系統不主動發音，
+   由學生念出來、老師判斷對不對——念對按鈕讓這張牌從牌堆移除，念錯按鈕把牌放回牌堆重新洗牌，
+   直到全部牌都被移除才算完成。跟 buildWheel() 用同一套「老師覆判+移除/保留」的資料流程。 */
+function buildCardFlip(area, lessonId, pool) {
+  const total = pool.length;
+  let remaining = shuffle([...pool]);
+  let currentSym = null;
+  let flipped = false;
+  let draws = 0, wrongCount = 0;
+
+  area.innerHTML = `
+    <div class="game-title-bar">
+      <h2>🎴 翻牌總複習</h2>
+      <div class="game-stats"><div class="stat-box" id="cardflip-progress">0 / ${total}</div></div>
+    </div>
+    <p style="text-align:center;color:#666;margin-bottom:14px;font-size:16px;">按牌堆翻開一張，請學生念出來，老師再判斷對不對</p>
+    <div class="cardflip-wrap">
+      <div class="cardflip-stack">
+        <div class="cardflip-behind" style="transform:translate(8px,8px);"></div>
+        <div class="cardflip-behind" style="transform:translate(4px,4px);"></div>
+        <div class="cardflip-card" id="cardflip-card">
+          <div class="cardflip-inner" id="cardflip-inner">
+            <div class="cardflip-face cardflip-front"></div>
+            <div class="cardflip-face cardflip-back" id="cardflip-symbol"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wheel-judge" id="cardflip-judge" style="display:none;">
+        <button class="ctrl-btn success" id="cardflip-correct-btn">✅ 念對了，下一張</button>
+        <button class="ctrl-btn info" id="cardflip-wrong-btn">🔁 再練習，放回去</button>
+      </div>
+    </div>
+  `;
+
+  const cardEl = document.getElementById('cardflip-card');
+  const judgeBox = document.getElementById('cardflip-judge');
+  cardEl.onclick = draw;
+  document.getElementById('cardflip-correct-btn').onclick = () => judge(true);
+  document.getElementById('cardflip-wrong-btn').onclick = () => judge(false);
+
+  function draw() {
+    if (flipped || remaining.length === 0) return;
+    const idx = Math.floor(Math.random() * remaining.length);
+    currentSym = remaining[idx];
+    document.getElementById('cardflip-symbol').innerHTML = vbopo(currentSym);
+    cardEl.classList.add('flipped');
+    flipped = true;
+    setTimeout(() => { judgeBox.style.display = 'flex'; }, 650);
+  }
+
+  function judge(isCorrect) {
+    if (!flipped) return;
+    flipped = false;
+    const sym = currentSym;
+    draws++;
+    if (isCorrect) {
+      clearWrongAnswer(sym);
+      remaining = remaining.filter(s => s !== sym);
+    } else {
+      wrongCount++;
+      recordWrongAnswer(sym);
+    }
+    judgeBox.style.display = 'none';
+    document.getElementById('cardflip-progress').textContent = `${total - remaining.length} / ${total}`;
+    cardEl.classList.remove('flipped');
+    if (remaining.length === 0) setTimeout(finish, 650);
+  }
+
+  function finish() {
+    const ratio = draws > 0 ? (draws - wrongCount) / draws : 1;
+    let stars = 1;
+    if (ratio >= 0.9) stars = 3;
+    else if (ratio >= 0.7) stars = 2;
+    recordGameScore(lessonId, 'flashcard', draws, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🎴' : stars === 2 ? '😊' : '💪',
+      title: `${total} 張牌全部翻完了！`,
+      stars,
+      score: `共翻了 ${draws} 次，答對 ${draws - wrongCount} 次`,
+      msg: '全部的注音都複習過一輪了，太棒了！',
+      lessonId,
+    });
+  }
 }
 
 /* 工具：取「本堂重點為主 + 舊內容適量」的題目集 */
@@ -1824,29 +2001,129 @@ function buildTone(area, lessonId) {
   render();
 }
 
-/* === 第 23 堂 蚊子歌與終極挑戰 === */
-function buildFinale(area, lessonId, pool) {
+/* === 總複習堂：結合韻大轉盤（多元學習遊戲欄位）===
+   玩法：21個結合韻全部寫在轉盤上，按「轉一下」讓指針轉動，停下時指到的結合韻會放大，
+   由學生念出來、老師判斷對不對——念對按「移除」讓它從轉盤上消失，念錯按「保留」留在轉盤上，
+   直到全部結合韻都被移除才算完成。系統不主動發音，故意讓學生自己念。
+   重要：只有「指針」這個純圖形元件會旋轉，21個結合韻文字本身永遠不旋轉（維持 vbopo() 直式、ㄧ不轉成直線的規則）。 */
+const COMBINED_FINALS = ['ㄧㄢ', 'ㄧㄠ', 'ㄧㄡ', 'ㄧㄝ', 'ㄧㄚ', 'ㄧㄣ', 'ㄨㄛ', 'ㄧㄛ', 'ㄧㄤ', 'ㄧㄥ',
+  'ㄨㄟ', 'ㄨㄞ', 'ㄨㄢ', 'ㄨㄤ', 'ㄨㄥ', 'ㄨㄚ', 'ㄨㄣ', 'ㄩㄣ', 'ㄩㄝ', 'ㄩㄢ', 'ㄩㄥ'];
+const WHEEL_COLORS = ['#FFB6D9', '#A6D9F7', '#FFC857', '#7ED957'];
+const WHEEL_RADIUS = 130;
+
+function buildWheel(area, lessonId) {
+  const total = COMBINED_FINALS.length;
+  let remaining = shuffle([...COMBINED_FINALS]);
+  let rotation = 0;
+  let spinning = false;
+  let awaitingJudge = false;
+  let currentSym = null;
+  let spins = 0, wrongCount = 0;
+
   area.innerHTML = `
-    <div class="game-title-bar"><h2>🎤 蚊子歌唱讀＋終極挑戰</h2></div>
-    <div style="background:linear-gradient(135deg,#FFE5F1,#FFF9E5);border-radius:20px;padding:30px;text-align:center;">
-      <div style="font-size:60px;">🦟🎵</div>
-      <h3 style="color:#ff6b9d;margin:14px 0;">蚊子歌 (跟著唱)</h3>
-      <div style="line-height:2.6;font-size:24px;color:#555;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">小蚊子 嗡嗡嗡 ${vbopo('ㄨㄣ')} ${vbopo('ㄨㄣ')} ${vbopo('ㄨㄣ')}</div>
-        <div>飛來飛去 真討厭</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">${vbopo('ㄚ')} ${vbopo('ㄛ')} ${vbopo('ㄜ')} ${vbopo('ㄝ')} ${vbopo('ㄞ')} ${vbopo('ㄟ')} ${vbopo('ㄠ')} ${vbopo('ㄡ')}</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">${vbopo('ㄢ')} ${vbopo('ㄣ')} ${vbopo('ㄤ')} ${vbopo('ㄥ')} ${vbopo('ㄦ')} 都會念</div>
+    <div class="game-title-bar">
+      <h2>🎡 結合韻大轉盤</h2>
+      <div class="game-stats"><div class="stat-box" id="wheel-progress">0 / ${total}</div></div>
+    </div>
+    <p style="text-align:center;color:#666;margin-bottom:14px;font-size:16px;">按「轉一下」，指針停在哪個結合韻，請學生念出來，老師再判斷對不對</p>
+    <div class="wheel-wrap">
+      <div class="wheel-ring" id="wheel-ring">
+        <div class="wheel-needle" id="wheel-needle"></div>
       </div>
-      <button class="ctrl-btn primary" style="margin-top:20px;" onclick="speak('小蚊子，嗡嗡嗡，ㄨㄣ ㄨㄣ ㄨㄣ。飛來飛去真討厭。ㄚ ㄛ ㄜ ㄝ ㄞ ㄟ ㄠ ㄡ ㄢ ㄣ ㄤ ㄥ ㄦ 都會念。', 0.7)">🔊 跟著唱</button>
-      <button class="ctrl-btn success" style="margin-top:20px;margin-left:8px;" onclick="startUltimate()">🏆 開始終極大魔王測驗</button>
+      <button class="ctrl-btn primary" id="wheel-spin-btn" style="margin-top:20px;">🎡 轉一下</button>
+      <div class="wheel-judge" id="wheel-judge" style="display:none;">
+        <button class="ctrl-btn success" id="wheel-correct-btn">✅ 念對了，移除</button>
+        <button class="ctrl-btn info" id="wheel-wrong-btn">🔁 再練習，保留</button>
+      </div>
     </div>
   `;
-  window.startUltimate = function() {
-    buildQuiz(area, lessonId, pool, pool, 15);
-  };
+
+  const ring = document.getElementById('wheel-ring');
+  const needle = document.getElementById('wheel-needle');
+  const spinBtn = document.getElementById('wheel-spin-btn');
+  const judgeBox = document.getElementById('wheel-judge');
+  spinBtn.onclick = spin;
+  document.getElementById('wheel-correct-btn').onclick = () => judge(true);
+  document.getElementById('wheel-wrong-btn').onclick = () => judge(false);
+
+  function layout() {
+    ring.querySelectorAll('.wheel-chip').forEach(c => c.remove());
+    const n = remaining.length;
+    remaining.forEach((sym, i) => {
+      const angle = (360 / n) * i;
+      const chip = document.createElement('div');
+      chip.className = 'wheel-chip';
+      chip.dataset.sym = sym;
+      chip.style.background = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      chip.style.transform = `rotate(${angle}deg) translateY(-${WHEEL_RADIUS}px) rotate(${-angle}deg)`;
+      chip.innerHTML = vbopo(sym);
+      ring.appendChild(chip);
+    });
+  }
+
+  function spin() {
+    if (spinning || remaining.length === 0) return;
+    spinning = true;
+    spinBtn.disabled = true;
+    const n = remaining.length;
+    const targetIdx = Math.floor(Math.random() * n);
+    currentSym = remaining[targetIdx];
+    const sliceAngle = 360 / n;
+    const targetAngle = sliceAngle * targetIdx;
+    const currentMod = ((rotation % 360) + 360) % 360;
+    const delta = ((targetAngle - currentMod) % 360 + 360) % 360;
+    rotation += 1080 + delta;
+    needle.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+    setTimeout(() => reveal(targetIdx), 3000);
+  }
+
+  function reveal(targetIdx) {
+    const chip = ring.querySelectorAll('.wheel-chip')[targetIdx];
+    if (chip) chip.classList.add('selected');
+    judgeBox.style.display = 'flex';
+    spinning = false;
+    awaitingJudge = true;
+  }
+
+  function judge(isCorrect) {
+    if (!awaitingJudge) return;
+    awaitingJudge = false;
+    const sym = currentSym;
+    spins++;
+    if (isCorrect) {
+      clearWrongAnswer(sym);
+      remaining = remaining.filter(s => s !== sym);
+    } else {
+      wrongCount++;
+      recordWrongAnswer(sym);
+    }
+    judgeBox.style.display = 'none';
+    document.getElementById('wheel-progress').textContent = `${total - remaining.length} / ${total}`;
+    if (remaining.length === 0) finish();
+    else { layout(); spinBtn.disabled = false; }
+  }
+
+  function finish() {
+    const ratio = spins > 0 ? (spins - wrongCount) / spins : 1;
+    let stars = 1;
+    if (ratio >= 0.9) stars = 3;
+    else if (ratio >= 0.7) stars = 2;
+    recordGameScore(lessonId, 'mix', spins, stars);
+    if (stars >= 2) confetti();
+    showResult({
+      emoji: stars === 3 ? '🎡' : stars === 2 ? '😊' : '💪',
+      title: '21 個結合韻全部過關了！',
+      stars,
+      score: `共轉了 ${spins} 次，答對 ${spins - wrongCount} 次`,
+      msg: '結合韻都認得了，太棒了！',
+      lessonId,
+    });
+  }
+
+  layout();
 }
 
-/* === 第 24 堂 總複習：拼音大會考 + 聲調大會考 兩階段 === */
+/* === 總複習堂：拼音大會考 + 聲調大會考 兩階段（闖關測驗欄位） === */
 const GRADUATION_TONE_WORDS = [
   { word: '媽', tone: 1 }, { word: '麻', tone: 2 }, { word: '馬', tone: 3 }, { word: '罵', tone: 4 }, { word: '嗎', tone: 5 },
   { word: '湯', tone: 1 }, { word: '糖', tone: 2 }, { word: '躺', tone: 3 }, { word: '燙', tone: 4 },
@@ -2074,7 +2351,7 @@ function buildGraduation(area, lessonId, pool) {
     let stars = 1;
     if (ratio >= 0.85) stars = 3;
     else if (ratio >= 0.6) stars = 2;
-    recordGameScore(lessonId, 'mix', correct, stars);
+    recordGameScore(lessonId, 'quiz', correct, stars);
     if (stars >= 2) confetti();
     showResult({
       emoji: stars === 3 ? '🎓' : stars === 2 ? '😊' : '💪',
