@@ -553,6 +553,41 @@
     font-size: 64px; color: #ff6b9d; font-weight: bold; line-height: 1;
   }
 
+  /* 闖關測驗：聽音找氣球（氣球一個一個從底部飛上來，動態有趣，跟多元小遊戲的靜態選項做出區隔） */
+  .balloon-sky {
+    position: relative; height: 380px; max-width: 620px; margin: 10px auto 0;
+    overflow: hidden; border-radius: 22px;
+    background: linear-gradient(180deg, #BEE7FB 0%, #EAF7FF 65%, #ffffff 100%);
+  }
+  .balloon-btn {
+    position: absolute; bottom: -150px;
+    width: 100px; height: 120px; border: 4px solid rgba(255,255,255,0.65);
+    border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: bold; color: white; cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    animation: balloon-rise 7s linear infinite;
+  }
+  .balloon-btn::after {
+    content: ''; position: absolute; bottom: -18px; left: 50%; width: 2px; height: 18px;
+    background: rgba(120,120,120,0.5); transform: translateX(-50%);
+  }
+  .balloon-btn.disabled { animation-play-state: paused; pointer-events: none; }
+  .balloon-c0 { background: linear-gradient(160deg, #ff6b9d, #ff8fb5); }
+  .balloon-c1 { background: linear-gradient(160deg, #FFC857, #FFDA8C); }
+  .balloon-c2 { background: linear-gradient(160deg, #A6D9F7, #C7E9FB); }
+  .balloon-c3 { background: linear-gradient(160deg, #7ED957, #A3E67F); }
+  .balloon-btn.correct { background: #7ED957; animation: balloon-pop 0.5s forwards; }
+  .balloon-btn.wrong { background: #FF8888; animation: shake 0.4s; }
+  @keyframes balloon-rise { from { bottom: -150px; } to { bottom: 100%; } }
+  @keyframes balloon-pop { 0% { transform: scale(1); opacity: 1; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.2); opacity: 0; } }
+  .vanish-covered {
+    background: repeating-linear-gradient(45deg, #ff6b9d 0, #ff6b9d 10px, #FFB6D9 10px, #FFB6D9 20px);
+    color: white; font-size: 34px;
+  }
+  .vanish-row-line { display: flex; flex-wrap: nowrap; justify-content: center; gap: 14px; max-width: 100%; overflow-x: auto; }
+  .vanish-row-line .choice-btn { flex: 0 0 100px; min-width: 0; }
+
   /* Responsive */
   @media (max-width: 600px) {
     .memory-grid { grid-template-columns: repeat(3, 1fr); }
@@ -2366,7 +2401,51 @@ function buildGraduation(area, lessonId, pool) {
   renderCombine();
 }
 
-/* === 闖關測驗（10 題） === */
+/* === 闖關測驗：形近混淆組（用於挑選容易搞混的干擾選項／找不同的多數符號／消失字家族） === */
+const CONFUSE_GROUPS = [
+  ['ㄅ', 'ㄆ', 'ㄇ', 'ㄈ'],
+  ['ㄉ', 'ㄊ', 'ㄋ', 'ㄌ'],
+  ['ㄍ', 'ㄎ', 'ㄏ'],
+  ['ㄐ', 'ㄑ', 'ㄒ'],
+  ['ㄓ', 'ㄔ', 'ㄕ', 'ㄖ'],
+  ['ㄗ', 'ㄘ', 'ㄙ'],
+  ['ㄧ', 'ㄨ', 'ㄩ'],
+  ['ㄚ', 'ㄛ', 'ㄜ', 'ㄝ'],
+  ['ㄞ', 'ㄟ', 'ㄠ', 'ㄡ'],
+  ['ㄢ', 'ㄣ', 'ㄤ', 'ㄥ'],
+  ['ㄧㄢ', 'ㄧㄠ', 'ㄧㄡ', 'ㄧㄝ', 'ㄧㄚ', 'ㄧㄣ', 'ㄧㄛ', 'ㄧㄤ', 'ㄧㄥ'],
+  ['ㄨㄛ', 'ㄨㄟ', 'ㄨㄞ', 'ㄨㄢ', 'ㄨㄤ', 'ㄨㄥ', 'ㄨㄚ', 'ㄨㄣ'],
+  ['ㄩㄣ', 'ㄩㄝ', 'ㄩㄢ', 'ㄩㄥ'],
+];
+
+// 優先從同一組「形近混淆」符號裡選干擾項，題庫不夠時才 fallback 隨機選
+function getConfusables(target, pool, count) {
+  const group = CONFUSE_GROUPS.find(g => g.includes(target)) || [];
+  let candidates = shuffle(group.filter(s => s !== target && pool.includes(s)));
+  if (candidates.length < count) {
+    const rest = shuffle(pool.filter(s => s !== target && !candidates.includes(s)));
+    candidates = candidates.concat(rest);
+  }
+  return candidates.slice(0, count);
+}
+
+// 「消失的字」用：優先整組從同一個形近混淆家族抽（同家族更考驗認讀，而非亂猜），家族不夠大就退而求其次
+function pickVanishRow(pool, size) {
+  const familyPools = CONFUSE_GROUPS.map(g => g.filter(s => pool.includes(s))).filter(g => g.length >= 2);
+  if (familyPools.length === 0) return shuffle(pool).slice(0, Math.min(size, pool.length));
+  const eligible = familyPools.filter(g => g.length >= size);
+  const family = eligible.length > 0 ? pickRandom(eligible, 1)[0] : familyPools.slice().sort((a, b) => b.length - a.length)[0];
+  return shuffle(family).slice(0, Math.min(size, family.length));
+}
+
+// 闖關測驗題型依堂次輪替（每3堂一輪，避免每堂都長一樣），第23堂另有 special:'graduation' 覆蓋，不受此影響
+const QUIZ_VARIANTS = ['balloon', 'oddone', 'vanish'];
+function getQuizVariant(lessonId) {
+  return QUIZ_VARIANTS[(lessonId - 1) % QUIZ_VARIANTS.length];
+}
+
+/* === 闖關測驗（10 題，純測「認讀符號本身」，避免跟「聽音點點看」「連連看」重複——
+   三種題型依堂次輪替：🎈聽音氣球／🔎找不同(老師覆判念讀)／👀消失的字(記憶回想) === */
 function buildQuiz(area, lessonId, focus, pool, numQ) {
   const requestedQ = numQ || 10;
   // 題目：60% 本堂、40% 舊
@@ -2380,41 +2459,182 @@ function buildQuiz(area, lessonId, focus, pool, numQ) {
   const oldQs = pickRandom(oldOnly.length > 0 ? oldOnly : pool, oldQuotient);
   const questionTargets = shuffle([...newQs, ...oldQs]);
 
-  // 隨機題型：聽音選字、看符號選圖、看圖選符號（三種互補，無一可靠形狀比對作弊）
+  const variant = getQuizVariant(lessonId);
+  const BALLOON_COLORS = ['balloon-c0', 'balloon-c1', 'balloon-c2', 'balloon-c3'];
+
   const questions = questionTargets.map(target => {
-    const types = ['listen2sym', 'sym2img', 'img2sym'];
-    const t = types[Math.floor(Math.random() * types.length)];
-    const distractors = pickRandom(pool.filter(s => s !== target), 3);
+    if (variant === 'oddone') {
+      // 找不同：4 格顯示同一個「多數符號」（優先挑目標的形近混淆字），1 格顯示目標本身，老師覆判孩子有沒有找對、念對
+      const majorityPool = getConfusables(target, pool, 1);
+      const majority = majorityPool[0] || pickRandom(pool.filter(s => s !== target), 1)[0];
+      const tiles = shuffle([majority, majority, majority, majority, target]);
+      const targetIdx = tiles.indexOf(target);
+      return { target, tiles, targetIdx };
+    }
+    if (variant === 'vanish') {
+      // 消失的字：一排符號看清楚後，其中一個變成「？」，再過幾秒全部蓋起來，孩子要從記憶中點出剛剛少了哪一個
+      const row = pickVanishRow(pool, 4);
+      const vanishTarget = pickRandom(row, 1)[0];
+      return { row, target: vanishTarget };
+    }
+    // balloon：聽音找氣球
+    const distractors = getConfusables(target, pool, 3);
     const choices = shuffle([target, ...distractors]);
-    return { target, type: t, choices };
+    return { target, choices };
   });
   const totalQ = questions.length; // 用實際題數，避免 idx 超出陣列範圍
 
   let idx = 0;
   let correct = 0;
-  const startTime = Date.now();
+
+  function populateBalloons(q) {
+    const sky = document.getElementById('quiz-area-main');
+    const lanes = shuffle([8, 30, 52, 74]); // 4 條水平車道，打散順序避免每次都同一顆先飛
+    q.choices.forEach((sym, i) => {
+      const btn = document.createElement('button');
+      btn.className = `balloon-btn ${BALLOON_COLORS[i % BALLOON_COLORS.length]}`;
+      btn.dataset.sym = sym;
+      btn.innerHTML = vbopo(sym);
+      btn.style.left = lanes[i % lanes.length] + '%';
+      btn.style.animationDelay = (i * 1.3) + 's'; // 一顆一顆飛上來，不是同時全部出現
+      btn.onclick = () => {
+        document.querySelectorAll('.balloon-btn').forEach(b => b.classList.add('disabled'));
+        if (sym === q.target) {
+          btn.classList.add('correct');
+          correct++;
+          clearWrongAnswer(q.target);
+          setTimeout(next, 800);
+        } else {
+          btn.classList.add('wrong');
+          const correctBtn = [...document.querySelectorAll('.balloon-btn')].find(b => b.dataset.sym === q.target);
+          if (correctBtn) correctBtn.classList.add('correct');
+          recordWrongAnswer(q.target);
+          speakSymbol(q.target);
+          setTimeout(next, 1500);
+        }
+      };
+      sky.appendChild(btn);
+    });
+  }
+
+  function populateOddOne(q) {
+    const cc = document.getElementById('quiz-area-main');
+    q.tiles.forEach(sym => {
+      const div = document.createElement('div');
+      div.className = 'choice-btn';
+      div.style.cursor = 'default';
+      div.innerHTML = vbopo(sym);
+      cc.appendChild(div);
+    });
+    const tileEls = [...cc.children];
+    // 3秒後全部蓋起來，逼孩子憑記憶回想剛剛哪一格不一樣，而不是一直盯著看比對
+    setTimeout(() => {
+      tileEls.forEach(t => { t.innerHTML = '🎴'; t.classList.add('vanish-covered'); });
+      document.getElementById('oddone-judge').style.display = 'flex';
+    }, 3000);
+
+    let judged = false;
+    function judge(isCorrect) {
+      if (judged) return;
+      judged = true;
+      document.getElementById('oddone-judge').style.display = 'none';
+      tileEls.forEach((t, i) => {
+        t.innerHTML = vbopo(q.tiles[i]);
+        t.classList.remove('vanish-covered');
+      });
+      tileEls[q.targetIdx].classList.add('correct');
+      if (isCorrect) {
+        correct++;
+        clearWrongAnswer(q.target);
+        setTimeout(next, 900);
+      } else {
+        recordWrongAnswer(q.target);
+        setTimeout(next, 1200);
+      }
+    }
+    document.getElementById('oddone-correct-btn').onclick = () => judge(true);
+    document.getElementById('oddone-wrong-btn').onclick = () => judge(false);
+  }
+
+  function populateVanish(q) {
+    const rowEl = document.getElementById('vanish-row');
+    q.row.forEach(sym => {
+      const div = document.createElement('div');
+      div.className = 'choice-btn';
+      div.style.cursor = 'default';
+      div.dataset.sym = sym;
+      div.innerHTML = vbopo(sym);
+      rowEl.appendChild(div);
+    });
+    const tiles = [...rowEl.children];
+    const targetTile = tiles.find(t => t.dataset.sym === q.target);
+    // 3秒後：目標那張變成？（其餘仍看得到）
+    setTimeout(() => {
+      targetTile.innerHTML = '？';
+      targetTile.style.color = '#bbb';
+      targetTile.style.borderStyle = 'dashed';
+    }, 3000);
+    // 再3秒後（共6秒）：全部蓋起來，逼孩子真正靠記憶回想，而不是用剩下還看得到的去推
+    setTimeout(() => {
+      tiles.forEach(t => {
+        t.innerHTML = '🎴';
+        t.classList.add('vanish-covered');
+        t.style.color = '';
+        t.style.borderStyle = '';
+      });
+      const cc = document.getElementById('quiz-area-main');
+      shuffle(q.row).forEach(sym => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.dataset.sym = sym;
+        btn.innerHTML = vbopo(sym);
+        btn.onclick = () => {
+          document.querySelectorAll('#quiz-area-main .choice-btn').forEach(b => b.classList.add('disabled'));
+          if (sym === q.target) {
+            btn.classList.add('correct');
+            correct++;
+            clearWrongAnswer(q.target);
+            setTimeout(next, 800);
+          } else {
+            btn.classList.add('wrong');
+            const correctBtn = [...document.querySelectorAll('#quiz-area-main .choice-btn')].find(b => b.dataset.sym === q.target);
+            if (correctBtn) correctBtn.classList.add('correct');
+            recordWrongAnswer(q.target);
+            speakSymbol(q.target);
+            setTimeout(next, 1500);
+          }
+        };
+        cc.appendChild(btn);
+      });
+    }, 6000);
+  }
 
   function render() {
     const q = questions[idx];
-    const target = q.target;
-    const data = PHONETIC_DATA[target] || {};
 
-    let questionHtml = '';
-    if (q.type === 'listen2sym') {
-      questionHtml = `
-        <h3>👂 聽發音，選出正確的注音</h3>
-        <div class="speaker-big" style="width:120px;height:120px;line-height:120px;font-size:60px;" onclick="speakSymbol('${target}')">🔊</div>
+    let headerHtml = '';
+    let bodyHtml = '';
+    if (variant === 'balloon') {
+      headerHtml = `<h3>🎈 聽音找氣球，點出正確的注音</h3>`;
+      bodyHtml = `
+        <div class="speaker-big" style="width:100px;height:100px;line-height:100px;font-size:50px;" onclick="speakSymbol('${q.target}')">🔊</div>
+        <div id="quiz-area-main" class="balloon-sky"></div>
       `;
-    } else if (q.type === 'sym2img') {
-      questionHtml = `
-        <h3>🖼️ 這個注音對應哪個東西？</h3>
-        <div class="big-symbol">${vbopo(target)}</div>
+    } else if (variant === 'oddone') {
+      headerHtml = `<h3>🔎🗣️ 記住哪一個不一樣，蓋起來後念出來給老師聽</h3>`;
+      bodyHtml = `
+        <div id="quiz-area-main" class="choices-grid" style="max-width:600px;margin:0 auto 20px;"></div>
+        <div class="wheel-judge" id="oddone-judge" style="display:none;">
+          <button class="ctrl-btn success" id="oddone-correct-btn">✅ 找對了，也念對了</button>
+          <button class="ctrl-btn info" id="oddone-wrong-btn">🔁 再練習一次</button>
+        </div>
       `;
-    } else if (q.type === 'img2sym') {
-      questionHtml = `
-        <h3>🖼️ 這個圖是什麼注音？</h3>
-        <div style="font-size:80px;margin:16px 0;max-width:220px;max-height:160px;display:inline-block;">${getCardVisual(target)}</div>
-        <div style="font-size:28px;color:#555;font-weight:bold;">${data.word || ''}</div>
+    } else if (variant === 'vanish') {
+      headerHtml = `<h3>👀 記住它們，少了哪一個？</h3>`;
+      bodyHtml = `
+        <div id="vanish-row" class="vanish-row-line" style="margin:0 auto 20px;"></div>
+        <p style="color:#666;font-size:16px;margin-bottom:10px;">牌蓋起來後，請點出「少了哪一個」</p>
+        <div id="quiz-area-main" class="vanish-row-line" style="margin:0 auto;"></div>
       `;
     }
 
@@ -2428,60 +2648,18 @@ function buildQuiz(area, lessonId, focus, pool, numQ) {
       </div>
       <div class="quiz-progress"><div class="quiz-progress-fill" style="width:${((idx)/totalQ)*100}%"></div></div>
       <div class="quiz-area">
-        <div class="quiz-question">${questionHtml}</div>
-        <div id="quiz-choices"></div>
+        <div class="quiz-question">${headerHtml}</div>
+        ${bodyHtml}
       </div>
     `;
 
-    const cc = document.getElementById('quiz-choices');
-    if (q.type === 'sym2img') {
-      cc.className = 'choices-grid';
-      cc.style.maxWidth = '600px';
-      cc.style.margin = '0 auto';
-      q.choices.forEach(sym => {
-        const d = PHONETIC_DATA[sym] || {};
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.dataset.sym = sym;
-        btn.innerHTML = `<div style="font-size:50px;max-width:120px;max-height:90px;">${getCardVisual(sym)}</div><div style="font-size:18px;color:#555;margin-top:6px;">${d.word || sym}</div>`;
-        btn.onclick = () => answer(sym, btn, target);
-        cc.appendChild(btn);
-      });
-    } else {
-      cc.className = 'choices-grid';
-      cc.style.maxWidth = '600px';
-      cc.style.margin = '0 auto';
-      q.choices.forEach(sym => {
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.dataset.sym = sym;
-        btn.innerHTML = vbopo(sym);
-        btn.onclick = () => answer(sym, btn, target);
-        cc.appendChild(btn);
-      });
-    }
-
-    if (q.type === 'listen2sym') {
-      setTimeout(() => speakSymbol(target), 400);
-    }
-  }
-
-  function answer(sym, btn, target) {
-    const all = area.querySelectorAll('.choice-btn');
-    all.forEach(b => b.classList.add('disabled'));
-    if (sym === target) {
-      btn.classList.add('correct');
-      correct++;
-      clearWrongAnswer(target);
-      setTimeout(next, 700);
-    } else {
-      btn.classList.add('wrong');
-      all.forEach(b => {
-        if (b.dataset.sym === target) b.classList.add('correct');
-      });
-      recordWrongAnswer(target);
-      speakSymbol(target);
-      setTimeout(next, 1500);
+    if (variant === 'balloon') {
+      populateBalloons(q);
+      setTimeout(() => speakSymbol(q.target), 400);
+    } else if (variant === 'oddone') {
+      populateOddOne(q);
+    } else if (variant === 'vanish') {
+      populateVanish(q);
     }
   }
 
