@@ -2490,6 +2490,7 @@ function buildQuiz(area, lessonId, focus, pool, numQ) {
   function populateBalloons(q) {
     const sky = document.getElementById('quiz-area-main');
     const lanes = shuffle([8, 30, 52, 74]); // 4 條水平車道，打散順序避免每次都同一顆先飛
+    let missedOnce = false; // 這題有沒有先按錯過（按錯不換題，只有按對才換，但首次就答對才算過關計分）
     q.choices.forEach((sym, i) => {
       const btn = document.createElement('button');
       btn.className = `balloon-btn ${BALLOON_COLORS[i % BALLOON_COLORS.length]}`;
@@ -2498,19 +2499,22 @@ function buildQuiz(area, lessonId, focus, pool, numQ) {
       btn.style.left = lanes[i % lanes.length] + '%';
       btn.style.animationDelay = (i * 1.3) + 's'; // 一顆一顆飛上來，不是同時全部出現
       btn.onclick = () => {
-        document.querySelectorAll('.balloon-btn').forEach(b => b.classList.add('disabled'));
+        if (btn.classList.contains('disabled')) return;
         if (sym === q.target) {
+          document.querySelectorAll('.balloon-btn').forEach(b => b.classList.add('disabled'));
           btn.classList.add('correct');
-          correct++;
-          clearWrongAnswer(q.target);
+          if (!missedOnce) {
+            correct++;
+            clearWrongAnswer(q.target);
+          } else {
+            recordWrongAnswer(q.target);
+          }
           setTimeout(next, 800);
         } else {
+          // 按錯：氣球不會消失，只搖一下當回饋，孩子可以繼續嘗試，直到按對才換下一題
+          missedOnce = true;
           btn.classList.add('wrong');
-          const correctBtn = [...document.querySelectorAll('.balloon-btn')].find(b => b.dataset.sym === q.target);
-          if (correctBtn) correctBtn.classList.add('correct');
-          recordWrongAnswer(q.target);
-          speakSymbol(q.target);
-          setTimeout(next, 1500);
+          setTimeout(() => btn.classList.remove('wrong'), 500);
         }
       };
       sky.appendChild(btn);
