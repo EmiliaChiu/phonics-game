@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注音符號大富翁</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #FFE5F1 0%, #E5F4FF 50%, #FFF9E5 100%);
+    min-height: 100%;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; }
+  #app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+  /* ---------- 通用 ---------- */
+  .vbopo { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.05; }
+  .vbopo > span { display: block; }
+
+  .btn {
+    padding: 12px 24px; border-radius: 20px; font-size: 20px; font-weight: bold;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: transform 0.1s;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+  .btn-pink { background: linear-gradient(135deg, #ff6b9d, #FF9EC4); color: #fff; }
+  .btn-yellow { background: linear-gradient(135deg, #FFC857, #FFDA8C); color: #7a4a00; }
+  .btn-blue { background: linear-gradient(135deg, #A6D9F7, #C7E9FB); color: #094a6b; }
+  .btn-green { background: linear-gradient(135deg, #7ED957, #A3E67F); color: #1a4d0a; }
+  .btn-gray { background: #e0e0e0; color: #555; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  h1, h2, h3 { margin: 0 0 12px; }
+  .card-panel {
+    background: rgba(255,255,255,0.85); border-radius: 24px; padding: 24px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+
+  /* ---------- 開場畫面 ---------- */
+  .start-title { text-align: center; font-size: 42px; color: #ff6b9d; margin: 20px 0; }
+  .start-sub { text-align: center; font-size: 18px; color: #777; margin-bottom: 24px; }
+  .team-count-row, .mode-row { display: flex; justify-content: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .team-name-list { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto 24px; }
+  .team-name-row { display: flex; align-items: center; gap: 10px; }
+  .team-name-row .mascot { font-size: 32px; }
+  .team-name-row input {
+    flex: 1; font-size: 18px; padding: 10px 14px; border-radius: 14px; border: 2px solid #ffd3e6;
+  }
+  .last-result { text-align: center; color: #888; font-size: 15px; margin-bottom: 12px; }
+  .center-row { text-align: center; }
+  .mode-desc { text-align: center; color: #999; font-size: 13px; margin: -12px 0 20px; }
+
+  /* ---------- 記分列 ---------- */
+  .score-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+  .score-chip {
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px;
+    background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.08); font-size: 14px; font-weight: bold;
+    border: 3px solid transparent;
+  }
+  .score-chip.active { transform: scale(1.1); }
+  .score-chip .mascot { font-size: clamp(18px, 2.4vw, 26px); }
+
+  /* ---------- 棋盤（環狀） ---------- */
+  .board-wrap { display: flex; justify-content: center; margin: 16px 0; }
+  .board-grid {
+    position: relative; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
+    gap: 4px; width: 100%; max-width: 1140px; aspect-ratio: 1/1;
+    background: linear-gradient(135deg, #FFF3E0, #FFE8CC); border-radius: 28px; padding: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .tile {
+    position: relative; border-radius: 14px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-weight: bold; color: #fff; overflow: visible;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.6);
+    transition: transform 0.2s;
+  }
+  .tile .sym { font-size: clamp(15px, 2.1vw, 27px); line-height: 1.03; }
+  .tile .cat-icon { font-size: clamp(18px, 2.6vw, 30px); }
+  .tile .tile-label { font-size: clamp(8px, 1vw, 12px); margin-top: 2px; opacity: 0.95; font-weight: bold; }
+  .tile.cat-consonant { background: linear-gradient(150deg, #ff6b9d, #FF9EC4); }
+  .tile.cat-single { background: linear-gradient(150deg, #6FC3EE, #A6D9F7); }
+  .tile.cat-fate { background: linear-gradient(150deg, #FFC857, #FFDA8C); color: #7a4a00; }
+  .tile.cat-parking { background: linear-gradient(150deg, #B0B0B0, #D6D6D6); color: #555; }
+  .tile.cat-start { background: linear-gradient(150deg, #7ED957, #A3E67F); }
+  .tile-landed { animation: tileLand 0.6s ease; z-index: 6; }
+  @keyframes tileLand {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.5); box-shadow: 0 0 0 6px rgba(255,255,255,0.95), 0 8px 18px rgba(0,0,0,0.35); }
+    100% { transform: scale(1); }
+  }
+  .tile-pawns { position: absolute; bottom: -8px; display: flex; justify-content: center; z-index: 4; }
+  .tile-pawns span { font-size: clamp(20px, 3vw, 32px); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45)); margin-left: -8px; }
+  .tile-pawns span:first-child { margin-left: 0; }
+
+  /* ---------- 中央面板 ---------- */
+  .board-center {
+    grid-column: 2 / 11; grid-row: 2 / 11; border-radius: 18px;
+    background: rgba(255,255,255,0.92); box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px; gap: 6px; overflow: hidden;
+  }
+  .center-title { font-size: clamp(18px, 2.8vw, 30px); color: #ff6b9d; font-weight: bold; }
+  .tier-badge { font-size: clamp(11px, 1.4vw, 15px); color: #999; margin-bottom: 4px; }
+  .center-turn { font-size: clamp(14px, 2.2vw, 22px); text-align: center; }
+  .center-dice-row { display: flex; align-items: center; gap: 16px; }
+  .dice-box {
+    display: inline-block; width: clamp(52px,7.2vw,76px); height: clamp(52px,7.2vw,76px);
+    background: linear-gradient(150deg, #ffffff, #f2f2f2); border-radius: 16px; border: 2px solid #fff;
+    box-shadow: 0 5px 0 #dcdcdc, 0 8px 14px rgba(0,0,0,0.25), inset 0 2px 3px rgba(255,255,255,0.9);
+  }
+  .dice-box.rolling { animation: diceRoll 0.5s linear infinite; }
+  @keyframes diceRoll {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(90deg) scale(1.1); }
+    50% { transform: rotate(180deg) scale(0.92); }
+    75% { transform: rotate(270deg) scale(1.08); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .die-face { display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr); width: 100%; height: 100%; padding: 9px; gap: 2px; }
+  .die-face .pip { border-radius: 50%; }
+  .die-face .pip.on { background: radial-gradient(circle at 35% 30%, #ff9dbf, #ff6b9d); box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); }
+  .tone-legend { display: flex; gap: 4px; margin-top: 2px; }
+  .tone-mini { width: clamp(28px,3.8vw,42px); text-align: center; font-size: clamp(9px,1.1vw,11px); color: #888; }
+  .tone-mini .shape { font-size: clamp(13px,1.9vw,20px); color: #555; }
+  .pile-row { display: flex; gap: 10px; margin-top: 4px; }
+  .pile {
+    width: clamp(46px,6.6vw,70px); height: clamp(34px,5vw,54px); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: clamp(9px,1.2vw,12px); font-weight: bold; color: #fff; position: relative;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.15), -1px -1px 0 rgba(255,255,255,0.4) inset;
+  }
+  .pile::before {
+    content: ''; position: absolute; inset: -3px -3px auto auto; width: 100%; height: 100%;
+    border-radius: 8px; background: inherit; z-index: -1; transform: rotate(-6deg);
+  }
+  .pile-fate { background: linear-gradient(150deg, #FFC857, #FFDA8C); color: #7a4a00; }
+  .pile-consonant { background: linear-gradient(150deg, #ff6b9d, #FF9EC4); }
+  .pile-final { background: linear-gradient(150deg, #6FC3EE, #A6D9F7); }
+  .pile-combined { background: linear-gradient(150deg, #A78BE0, #C6B3F5); }
+
+  /* ---------- 彈窗 ---------- */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center;
+    justify-content: center; z-index: 50; padding: 16px;
+  }
+  .modal-box {
+    background: #fff; border-radius: 28px; padding: 32px; max-width: 560px; width: 100%;
+    text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal-box h2 { font-size: 26px; }
+  .big-symbol { font-size: 90px; margin: 16px 0; }
+  .card-row { display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap; }
+  .draw-card {
+    background: linear-gradient(160deg, #fff, #FFF3F8); border-radius: 18px; padding: 18px 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-size: 60px; min-width: 100px;
+    animation: cardPop 0.35s ease;
+  }
+  @keyframes cardPop { from { transform: scale(0.4) rotate(-8deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+  .card-label { font-size: 14px; color: #999; margin-top: 6px; }
+  .tone-card { font-size: 40px; }
+  .judge-row { display: flex; justify-content: center; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+  .modal-note { color: #888; font-size: 15px; margin-top: 4px; }
+
+  .rank-list { list-style: none; padding: 0; margin: 16px 0; text-align: left; }
+  .rank-list li {
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 14px;
+    background: #FFF7FB; margin-bottom: 8px; font-size: 20px;
+  }
+  .rank-list li .mascot { font-size: 28px; }
+  .rank-list li .score { margin-left: auto; font-weight: bold; color: #ff6b9d; }
+
+  @media (max-width: 700px) {
+    .tile .sym { font-size: 10px; }
+    .tile .cat-icon { font-size: 13px; }
+    .tile .tile-label { font-size: 6px; }
+    .big-symbol { font-size: 60px; }
+    .draw-card { font-size: 42px; padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ========================================
+   注音資料（沿用「正音23堂遊戲」同一套，保證發音規則一致）
+   ======================================== */
+const PHONETIC_DATA = {
+  'ㄧㄢ': { word: '眼', emoji: '👁️', speech: '煙' },
+  'ㄧㄠ': { word: '咬', emoji: '😬', speech: '腰' },
+  'ㄧㄡ': { word: '游', emoji: '🏊', speech: '優' },
+  'ㄧㄝ': { word: '葉', emoji: '🍃', speech: '椰' },
+  'ㄧㄚ': { word: '芽', emoji: '🌱', speech: '鴨' },
+  'ㄧㄣ': { word: '音', emoji: '🎵', speech: '音' },
+  'ㄜ': { word: '', emoji: '🦢', speech: 'ㄜ' },
+  'ㄛ': { word: '', emoji: '😮', speech: 'ㄛ' },
+  'ㄨㄛ': { word: '我', emoji: '🙋', speech: '窩' },
+  'ㄧㄛ': { word: '唷', emoji: '😊', speech: '唷' },
+  'ㄤ': { word: '', emoji: '🔔', speech: 'ㄤ' },
+  'ㄧㄤ': { word: '癢', emoji: '🤧', speech: '央' },
+  'ㄧㄥ': { word: '贏', emoji: '🏆', speech: '鷹' },
+  'ㄨ': { word: '', emoji: '🐢', speech: 'ㄨ' },
+  'ㄨㄟ': { word: '喂', emoji: '📞', speech: '威' },
+  'ㄞ': { word: '', emoji: '☀️', speech: 'ㄞ' },
+  'ㄨㄞ': { word: '歪', emoji: '🤪', speech: '歪' },
+  'ㄨㄢ': { word: '彎', emoji: '〰️', speech: '彎' },
+  'ㄨㄤ': { word: '網', emoji: '🕸️', speech: '汪' },
+  'ㄨㄥ': { word: '甕', emoji: '🏺', speech: '翁' },
+  'ㄨㄚ': { word: '挖', emoji: '⛏️', speech: '蛙' },
+  'ㄣ': { word: '', emoji: '🦟', speech: 'ㄣ' },
+  'ㄨㄣ': { word: '溫', emoji: '🌡️', speech: '溫' },
+  'ㄩㄣ': { word: '暈', emoji: '😵', speech: '暈' },
+  'ㄢ': { word: '', emoji: '🛡️', speech: 'ㄢ' },
+  'ㄩㄝ': { word: '樂', emoji: '🎶', speech: '約' },
+  'ㄩㄢ': { word: '圓', emoji: '⭕', speech: '冤' },
+  'ㄩㄥ': { word: '勇', emoji: '💪', speech: '傭' },
+  'ㄅ': { word: '', emoji: '🥛', speech: 'ㄅ' },
+  'ㄆ': { word: '', emoji: '🦀', speech: 'ㄆ' },
+  'ㄇ': { word: '', emoji: '🧢', speech: 'ㄇ' },
+  'ㄈ': { word: '', emoji: '💨', speech: 'ㄈ' },
+  'ㄉ': { word: '', emoji: '🦘', speech: 'ㄉ' },
+  'ㄊ': { word: '', emoji: '🍑', speech: 'ㄊ' },
+  'ㄋ': { word: '', emoji: '🎃', speech: 'ㄋ' },
+  'ㄌ': { word: '', emoji: '🐭', speech: 'ㄌ' },
+  'ㄍ': { word: '', emoji: '🕊️', speech: 'ㄍ' },
+  'ㄎ': { word: '', emoji: '🐸', speech: 'ㄎ' },
+  'ㄏ': { word: '', emoji: '🌸', speech: 'ㄏ' },
+  'ㄐ': { word: '', emoji: '🐔', speech: 'ㄐ' },
+  'ㄑ': { word: '', emoji: '🚩', speech: 'ㄑ' },
+  'ㄒ': { word: '', emoji: '🍉', speech: 'ㄒ' },
+  'ㄓ': { word: '', emoji: '🌳', speech: 'ㄓ' },
+  'ㄔ': { word: '', emoji: '🍴', speech: 'ㄔㄭ' },
+  'ㄕ': { word: '', emoji: '📚', speech: 'ㄕ' },
+  'ㄖ': { word: '', emoji: '📅', speech: 'ㄖ' },
+  'ㄗ': { word: '', emoji: '🍙', speech: 'ㄗ' },
+  'ㄘ': { word: '', emoji: '🦔', speech: 'ㄘ' },
+  'ㄙ': { word: '', emoji: '🥒', speech: 'ㄙ' },
+  'ㄧ': { word: '', emoji: '👕', speech: 'ㄧ' },
+  'ㄩ': { word: '', emoji: '🐟', speech: 'ㄩ' },
+  'ㄚ': { word: '', emoji: '🪖', speech: 'ㄚ' },
+  'ㄝ': { word: '', emoji: '🍃', speech: 'ㄟ' },
+  'ㄟ': { word: '', emoji: '🐚', speech: 'ㄟ' },
+  'ㄠ': { word: '', emoji: '🐱', speech: 'ㄠ' },
+  'ㄡ': { word: '', emoji: '🐦', speech: 'ㄡ' },
+  'ㄥ': { word: '', emoji: '💡', speech: 'ㄥ' },
+  'ㄦ': { word: '', emoji: '👂', speech: 'ㄦ' },
+};
+
+const COMBO_SPEECH = {
+  'ㄅㄛ': '波', 'ㄅㄤ': '幫', 'ㄅㄞ': '掰', 'ㄅㄣ': '奔', 'ㄅㄢ': '班', 'ㄅㄠ': '包',
+  'ㄌㄤ': '啷', 'ㄌㄨ': '嚕', 'ㄌㄠ': '撈',
+  'ㄉㄤ': '當', 'ㄉㄨ': '督', 'ㄉㄞ': '呆', 'ㄉㄢ': '單', 'ㄉㄠ': '刀',
+  'ㄇㄛ': '摸', 'ㄇㄠ': '貓',
+  'ㄈㄤ': '方', 'ㄈㄣ': '分', 'ㄈㄢ': '翻', 'ㄈㄨ': '夫',
+  'ㄆㄛ': '坡', 'ㄆㄤ': '乓', 'ㄆㄞ': '拍', 'ㄆㄣ': '噴', 'ㄆㄢ': '攀', 'ㄆㄨ': '撲', 'ㄆㄠ': '拋',
+  'ㄎㄜ': '科', 'ㄎㄤ': '康', 'ㄎㄞ': '開', 'ㄎㄢ': '刊', 'ㄎㄨ': '哭',
+  'ㄗㄤ': '髒', 'ㄗㄞ': '栽', 'ㄗㄨ': '租', 'ㄗㄠ': '糟',
+  'ㄙㄤ': '桑', 'ㄙㄞ': '腮', 'ㄙㄣ': '森', 'ㄙㄢ': '三', 'ㄙㄨ': '酥', 'ㄙㄠ': '搔',
+  'ㄍㄜ': '歌', 'ㄍㄤ': '缸', 'ㄍㄨ': '姑', 'ㄍㄞ': '該', 'ㄍㄣ': '跟', 'ㄍㄢ': '甘', 'ㄍㄠ': '高',
+  'ㄊㄤ': '湯', 'ㄊㄨ': '突', 'ㄊㄞ': '胎', 'ㄊㄢ': '攤', 'ㄊㄠ': '掏',
+  'ㄒㄩ': '需',
+  'ㄐㄩ': '居',
+  'ㄑㄩ': '區',
+  'ㄔㄜ': '車', 'ㄔㄤ': '昌', 'ㄔㄨ': '出', 'ㄔㄞ': '拆', 'ㄔㄢ': '攙', 'ㄔㄠ': '超',
+  'ㄕㄜ': '奢', 'ㄕㄤ': '傷', 'ㄕㄨ': '書', 'ㄕㄞ': '篩', 'ㄕㄣ': '身', 'ㄕㄢ': '山', 'ㄕㄠ': '燒',
+  'ㄘㄤ': '倉', 'ㄘㄨ': '粗', 'ㄘㄞ': '猜', 'ㄘㄢ': '餐', 'ㄘㄠ': '操',
+  'ㄓㄜ': '遮', 'ㄓㄤ': '章', 'ㄓㄨ': '豬', 'ㄓㄞ': '摘', 'ㄓㄣ': '真', 'ㄓㄢ': '沾', 'ㄓㄠ': '招',
+  'ㄅㄟ': '杯', 'ㄆㄟ': '呸', 'ㄈㄟ': '飛',
+  'ㄆㄡ': '剖', 'ㄇㄡ': '哞', 'ㄉㄡ': '兜', 'ㄊㄡ': '偷', 'ㄍㄡ': '鉤', 'ㄎㄡ': '摳', 'ㄙㄡ': '搜', 'ㄓㄡ': '粥', 'ㄔㄡ': '抽', 'ㄕㄡ': '收',
+  'ㄏㄜ': '喝', 'ㄏㄞ': '嗨', 'ㄏㄢ': '憨', 'ㄏㄨ': '呼', 'ㄏㄟ': '黑', 'ㄏㄚ': '哈', 'ㄏㄥ': '哼',
+  'ㄅㄥ': '崩', 'ㄆㄥ': '烹', 'ㄈㄥ': '風', 'ㄉㄥ': '燈', 'ㄍㄥ': '耕', 'ㄎㄥ': '坑', 'ㄓㄥ': '蒸', 'ㄔㄥ': '撐', 'ㄕㄥ': '生', 'ㄖㄥ': '扔', 'ㄗㄥ': '增', 'ㄙㄥ': '僧',
+};
+
+/* 聲符+結合韻 的有效組合（例如 ㄅㄧㄢ=邊）。逐一依國語音韻規則檢查過，只收「真的有這個字」的組合，
+   跟 COMBO_SPEECH 一樣是拼音遊戲的題庫依據，不是隨便配對。
+   有些聲符本來就不會跟某些結合韻拼在一起（例如 ㄅㄆㄇㄈ 不會配 ㄨ系/ㄩ系），這是國語本身的限制，找不到是正常的。 */
+const COMBO3_SPEECH = {
+  'ㄅㄧㄢ': '邊', 'ㄆㄧㄢ': '偏', 'ㄇㄧㄢ': '棉', 'ㄉㄧㄢ': '電', 'ㄊㄧㄢ': '天', 'ㄋㄧㄢ': '年', 'ㄌㄧㄢ': '臉', 'ㄐㄧㄢ': '尖', 'ㄑㄧㄢ': '千', 'ㄒㄧㄢ': '先',
+  'ㄅㄧㄠ': '表', 'ㄆㄧㄠ': '飄', 'ㄇㄧㄠ': '喵', 'ㄉㄧㄠ': '掉', 'ㄊㄧㄠ': '跳', 'ㄋㄧㄠ': '鳥', 'ㄌㄧㄠ': '聊', 'ㄐㄧㄠ': '叫', 'ㄑㄧㄠ': '橋', 'ㄒㄧㄠ': '小',
+  'ㄉㄧㄡ': '丟', 'ㄋㄧㄡ': '牛', 'ㄌㄧㄡ': '六', 'ㄐㄧㄡ': '舅', 'ㄑㄧㄡ': '秋', 'ㄒㄧㄡ': '休',
+  'ㄅㄧㄝ': '別', 'ㄇㄧㄝ': '咩', 'ㄉㄧㄝ': '跌', 'ㄊㄧㄝ': '貼', 'ㄋㄧㄝ': '捏', 'ㄐㄧㄝ': '姐', 'ㄑㄧㄝ': '茄', 'ㄒㄧㄝ': '鞋',
+  'ㄐㄧㄚ': '家', 'ㄑㄧㄚ': '掐', 'ㄒㄧㄚ': '下',
+  'ㄅㄧㄣ': '賓', 'ㄆㄧㄣ': '拼', 'ㄇㄧㄣ': '民', 'ㄋㄧㄣ': '您', 'ㄌㄧㄣ': '林', 'ㄐㄧㄣ': '今', 'ㄑㄧㄣ': '親', 'ㄒㄧㄣ': '心',
+  'ㄋㄧㄤ': '娘', 'ㄌㄧㄤ': '涼', 'ㄐㄧㄤ': '江', 'ㄑㄧㄤ': '牆', 'ㄒㄧㄤ': '香',
+  'ㄅㄧㄥ': '兵', 'ㄆㄧㄥ': '瓶', 'ㄇㄧㄥ': '明', 'ㄉㄧㄥ': '釘', 'ㄊㄧㄥ': '聽', 'ㄋㄧㄥ': '檸', 'ㄌㄧㄥ': '鈴', 'ㄐㄧㄥ': '睛', 'ㄑㄧㄥ': '輕', 'ㄒㄧㄥ': '星',
+  'ㄉㄨㄛ': '多', 'ㄊㄨㄛ': '拖', 'ㄋㄨㄛ': '挪', 'ㄍㄨㄛ': '鍋', 'ㄎㄨㄛ': '闊', 'ㄏㄨㄛ': '活', 'ㄓㄨㄛ': '桌', 'ㄔㄨㄛ': '戳', 'ㄕㄨㄛ': '說', 'ㄖㄨㄛ': '弱', 'ㄗㄨㄛ': '昨', 'ㄘㄨㄛ': '搓', 'ㄙㄨㄛ': '縮',
+  'ㄉㄨㄟ': '對', 'ㄊㄨㄟ': '腿', 'ㄍㄨㄟ': '鬼', 'ㄎㄨㄟ': '盔', 'ㄏㄨㄟ': '灰', 'ㄓㄨㄟ': '追', 'ㄔㄨㄟ': '吹', 'ㄕㄨㄟ': '誰', 'ㄗㄨㄟ': '嘴', 'ㄘㄨㄟ': '脆', 'ㄙㄨㄟ': '雖',
+  'ㄍㄨㄞ': '拐', 'ㄎㄨㄞ': '快', 'ㄏㄨㄞ': '壞',
+  'ㄉㄨㄢ': '短', 'ㄊㄨㄢ': '團', 'ㄋㄨㄢ': '暖', 'ㄌㄨㄢ': '亂', 'ㄍㄨㄢ': '關', 'ㄎㄨㄢ': '寬', 'ㄏㄨㄢ': '歡', 'ㄓㄨㄢ': '磚', 'ㄔㄨㄢ': '穿', 'ㄖㄨㄢ': '軟', 'ㄙㄨㄢ': '酸',
+  'ㄍㄨㄤ': '光', 'ㄎㄨㄤ': '狂', 'ㄏㄨㄤ': '黃', 'ㄓㄨㄤ': '裝', 'ㄔㄨㄤ': '窗', 'ㄕㄨㄤ': '雙',
+  'ㄉㄨㄥ': '東', 'ㄊㄨㄥ': '通', 'ㄋㄨㄥ': '農', 'ㄌㄨㄥ': '龍', 'ㄍㄨㄥ': '公', 'ㄎㄨㄥ': '空', 'ㄏㄨㄥ': '紅', 'ㄓㄨㄥ': '中', 'ㄔㄨㄥ': '蟲', 'ㄖㄨㄥ': '絨', 'ㄘㄨㄥ': '蔥', 'ㄙㄨㄥ': '送',
+  'ㄍㄨㄚ': '瓜', 'ㄎㄨㄚ': '誇', 'ㄏㄨㄚ': '花', 'ㄓㄨㄚ': '抓', 'ㄕㄨㄚ': '刷',
+  'ㄉㄨㄣ': '蹲', 'ㄊㄨㄣ': '吞', 'ㄍㄨㄣ': '滾', 'ㄎㄨㄣ': '昆', 'ㄏㄨㄣ': '昏', 'ㄓㄨㄣ': '準', 'ㄔㄨㄣ': '春', 'ㄕㄨㄣ': '順', 'ㄘㄨㄣ': '村', 'ㄙㄨㄣ': '孫',
+  'ㄐㄩㄣ': '軍', 'ㄑㄩㄣ': '群', 'ㄒㄩㄣ': '訓',
+  'ㄐㄩㄝ': '決', 'ㄑㄩㄝ': '缺', 'ㄒㄩㄝ': '學',
+  'ㄐㄩㄢ': '捲', 'ㄑㄩㄢ': '圈', 'ㄒㄩㄢ': '選',
+  'ㄑㄩㄥ': '窮', 'ㄒㄩㄥ': '熊',
+};
+
+const CONSONANTS = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ'];
+const COMBINED_FINALS = ['ㄧㄢ','ㄧㄠ','ㄧㄡ','ㄧㄝ','ㄧㄚ','ㄧㄣ','ㄨㄛ','ㄧㄛ','ㄧㄤ','ㄧㄥ','ㄨㄟ','ㄨㄞ','ㄨㄢ','ㄨㄤ','ㄨㄥ','ㄨㄚ','ㄨㄣ','ㄩㄣ','ㄩㄝ','ㄩㄢ','ㄩㄥ'];
+const ALL_SYMBOLS = Object.keys(PHONETIC_DATA);
+const FINALS_SINGLE = ALL_SYMBOLS.filter(s => !CONSONANTS.includes(s) && !COMBINED_FINALS.includes(s));
+/* 棋盤格只用這 37 個（21聲符+16韻符），結合韻不上棋盤，只當進階/高階模式的抽卡內容 */
+const CORE_SYMBOLS = [...CONSONANTS, ...FINALS_SINGLE];
+
+const TONES = [
+  { id: 1, name: '一聲', shape: '—' },
+  { id: 2, name: '二聲', shape: '／' },
+  { id: 3, name: '三聲', shape: '∨' },
+  { id: 4, name: '四聲', shape: '＼' },
+  { id: 5, name: '輕聲', shape: '•' },
+];
+/* 高階模式抽聲調卡只從這裡抽：輕聲是「第二音節相對弱化」的現象，單一個字獨立念本來就不會是輕聲，
+   所以拿掉輕聲，避免抽到「這個音沒有輕聲讀法」的狀況（老師實測回報過ㄑㄩ/ㄍㄨㄣ/ㄘㄢ/ㄙㄡ都沒有輕聲） */
+const DRAWABLE_TONES = TONES.filter(t => t.id !== 5);
+/* 少數「聲符+韻符/結合韻」組合，某幾聲調找不到常見字（太罕見或根本不存在），排除該聲調不要抽到。
+   之後如果又測到類似狀況，比照這裡加一筆即可（key 是「聲符+韻符」或「聲符+結合韻」兩個符號串起來）。 */
+const TONE_EXCLUDE = {
+  'ㄎㄥ': [3], // ㄎㄥ 三聲（kěng）太罕見，一般人不會念
+  'ㄖㄨㄛ': [2], // ㄖㄨㄛ 二聲（ruó）沒有實際存在的字
+  'ㄉㄧㄡ': [2], // ㄉㄧㄡ 二聲（diú）沒有實際存在的字，常見是一聲「丟」
+  'ㄉㄥ': [2], // ㄉㄥ 二聲（déng）不常見，常見是三聲「等」
+  'ㄉㄢ': [2], // ㄉㄢ 二聲（dán）不常見，常見是一、三、四聲
+};
+function drawToneFor(comboKey) {
+  const excluded = TONE_EXCLUDE[comboKey] || [];
+  const pool = DRAWABLE_TONES.filter(t => !excluded.includes(t.id));
+  return pick1(pool);
+}
+
+/* 骰子點數（3x3 九宮格，1=有點 0=空白），做成立體骰子造型用 */
+const DIE_PATTERNS = {
+  1: [0,0,0, 0,1,0, 0,0,0],
+  2: [1,0,0, 0,0,0, 0,0,1],
+  3: [1,0,0, 0,1,0, 0,0,1],
+  4: [1,0,1, 0,0,0, 1,0,1],
+  5: [1,0,1, 0,1,0, 1,0,1],
+  6: [1,0,1, 1,0,1, 1,0,1],
+};
+function diePipsHtml(n) {
+  return `<div class="die-face">${DIE_PATTERNS[n].map(v => `<span class="pip ${v ? 'on' : ''}"></span>`).join('')}</div>`;
+}
+
+function getCategory(sym) {
+  if (CONSONANTS.includes(sym)) return 'consonant';
+  if (COMBINED_FINALS.includes(sym)) return 'combined';
+  return 'single';
+}
+const CAT_ICON = { consonant: '🔴', single: '🔵', combined: '🟣' };
+const CAT_LABEL = { consonant: '聲符', single: '韻符', combined: '結合韻' };
+
+/* 聲符 <-> 韻符 雙向對照，從 COMBO_SPEECH 反推，只會抽到真的存在的組合 */
+const CONSONANT_FINAL_OPTIONS = {};
+const FINAL_CONSONANT_OPTIONS = {};
+Object.keys(COMBO_SPEECH).forEach(key => {
+  const c = key[0], f = key.slice(1);
+  if (!CONSONANT_FINAL_OPTIONS[c]) CONSONANT_FINAL_OPTIONS[c] = [];
+  CONSONANT_FINAL_OPTIONS[c].push(f);
+  if (!FINAL_CONSONANT_OPTIONS[f]) FINAL_CONSONANT_OPTIONS[f] = [];
+  FINAL_CONSONANT_OPTIONS[f].push(c);
+});
+
+/* 聲符 -> 結合韻 對照，從 COMBO3_SPEECH 反推，同樣只會抽到真的存在的字 */
+const CONSONANT_COMBINED_OPTIONS = {};
+Object.keys(COMBO3_SPEECH).forEach(key => {
+  const c = key[0], f = key.slice(1);
+  if (!CONSONANT_COMBINED_OPTIONS[c]) CONSONANT_COMBINED_OPTIONS[c] = [];
+  CONSONANT_COMBINED_OPTIONS[c].push(f);
+});
+
+/* ========================================
+   語音（TTS）— 規則與「正音23堂遊戲」相同
+   ======================================== */
+let zhVoice = null;
+function initVoices() {
+  const voices = speechSynthesis.getVoices();
+  const preferOrder = [
+    v => v.lang === 'zh-TW' && /Hanhan|Yating|HsiaoChen/i.test(v.name),
+    v => v.lang === 'zh-TW' && /Microsoft/i.test(v.name),
+    v => v.lang === 'zh-TW',
+    v => v.lang === 'zh-HK',
+    v => v.lang.startsWith('zh'),
+  ];
+  for (const matcher of preferOrder) {
+    const found = voices.find(matcher);
+    if (found) { zhVoice = found; break; }
+  }
+  if (!zhVoice && voices.length > 0) zhVoice = voices[0];
+}
+speechSynthesis.onvoiceschanged = initVoices;
+setTimeout(initVoices, 200);
+setTimeout(initVoices, 1000);
+
+function speak(text, rate = 0.8) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'zh-TW';
+  utter.rate = rate;
+  utter.pitch = 1.05;
+  if (zhVoice) utter.voice = zhVoice;
+  speechSynthesis.speak(utter);
+}
+function speakSymbol(symbol) {
+  const data = PHONETIC_DATA[symbol];
+  if (data) speak(data.speech);
+  else speak(symbol);
+}
+
+/* ========================================
+   工具
+   ======================================== */
+/* ㄧ 在 Windows 字型直式顯示常被畫成直線，改用「一」顯示以保持橫線形狀（只換顯示，資料仍是 ㄧ） */
+function bopoDisplay(c) { return c === 'ㄧ' ? '一' : c; }
+function vbopo(s) {
+  if (!s) return '';
+  return `<span class="vbopo">${[...s].map(c => `<span>${bopoDisplay(c)}</span>`).join('')}</span>`;
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pick1(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+/* ========================================
+   棋盤設計（環狀，12x12 外圈，共 44 格）
+   4 個角落：起點／停車場／命運卡／停車場
+   其餘 40 格：37 個核心注音符號（21聲符+16韻符，全部保證上棋盤）+ 2 張命運卡格 + 1 個停車場
+   ======================================== */
+const BOARD_N = 12;
+const BOARD_LEN = 4 * (BOARD_N - 1); // 44
+
+/* steps: 走幾格（正=前進、負=後退，抽到後畫面會像擲骰子一樣一格一格走給大家看）
+   scoreDelta: 加減分（立即生效，不用等動畫）
+   teleportStart: 直接跳回起點（格數可能很多，不會一格格走，用瞬間移動處理） */
+const FATE_CARDS = [
+  { text: '挖到寶藏地圖！前進 3 格', steps: 3 },
+  { text: '迷路了，後退 2 格', steps: -2 },
+  { text: '念得超標準，加 3 分！', scoreDelta: 3 },
+  { text: '老師比讚，加 2 分！', scoreDelta: 2 },
+  { text: '打瞌睡了，後退 3 格', steps: -3 },
+  { text: '幸運星星，加 1 分', scoreDelta: 1 },
+  { text: '快跑！前進 4 格', steps: 4 },
+  { text: '滑了一跤，退回起點', teleportStart: true },
+  { text: '全班一起幫你加油，原地不動' },
+  { text: '要更專心一點喔，扣 1 分', scoreDelta: -1 },
+  { text: '超級幸運日，加 5 分！', scoreDelta: 5 },
+  { text: '輕快地前進 2 格', steps: 2 },
+  { text: '滑倒了，後退 1 格', steps: -1 },
+];
+
+let BOARD = [];
+function buildBoard() {
+  const fillers = shuffle([
+    ...CORE_SYMBOLS.map(s => ({ type: 'symbol', symbol: s, category: getCategory(s) })),
+    ...Array(2).fill(null).map(() => ({ type: 'fate' })),
+    ...Array(1).fill(null).map(() => ({ type: 'parking' })),
+  ]);
+  const board = new Array(BOARD_LEN);
+  board[0] = { type: 'start' };
+  board[BOARD_N - 1] = { type: 'parking' };
+  board[2 * (BOARD_N - 1)] = { type: 'fate' };
+  board[3 * (BOARD_N - 1)] = { type: 'parking' };
+  let fi = 0;
+  for (let i = 1; i < BOARD_LEN; i++) {
+    if (board[i]) continue;
+    board[i] = fillers[fi++];
+  }
+  return board;
+}
+
+function boardCellRC(i) {
+  const n = BOARD_N, seg = n - 1;
+  if (i < seg) return { row: n - 1, col: i };
+  if (i < 2 * seg) return { row: n - 1 - (i - seg), col: n - 1 };
+  if (i < 3 * seg) return { row: 0, col: n - 1 - (i - 2 * seg) };
+  return { row: i - 3 * seg, col: 0 };
+}
+
+const MASCOTS = ['🐰','🐱','🐻','🦊'];
+const TEAM_COLORS = ['#ff6b9d', '#4FC3F7', '#FFC857', '#7ED957'];
+const TIER_LABEL = { basic: '初階版（認讀）', advance: '進階版（拼音配對）', high: '高階版（拼音+聲調）' };
+
+/* ========================================
+   遊戲狀態
+   ======================================== */
+let teams = [];
+let currentTeamIdx = 0;
+let tier = 'basic';
+let awaitingJudge = false;
+
+const app = document.getElementById('app');
+
+/* ---------- 開場畫面 ---------- */
+function renderStart() {
+  let lastResultHtml = '';
+  try {
+    const raw = localStorage.getItem('zhuyin_monopoly_last_result');
+    if (raw) {
+      const r = JSON.parse(raw);
+      lastResultHtml = `<div class="last-result">📜 上次戰績：${r.summary}</div>`;
+    }
+  } catch (e) {}
+
+  app.innerHTML = `
+    <h1 class="start-title">🎲 注音符號大富翁</h1>
+    <div class="start-sub">分組競賽，輪流擲骰子，繞著棋盤練注音！</div>
+    ${lastResultHtml}
+    <div class="card-panel">
+      <h3 style="text-align:center;">👥 幾隊比賽？</h3>
+      <div class="team-count-row" id="team-count-row"></div>
+      <div class="team-name-list" id="team-name-list"></div>
+      <h3 style="text-align:center;">🎯 選擇難度</h3>
+      <div class="mode-row" id="mode-row"></div>
+      <div class="mode-desc" id="mode-desc"></div>
+      <div class="center-row">
+        <button class="btn btn-pink" id="start-btn">開始遊戲 🚀</button>
+      </div>
+    </div>
+  `;
+
+  let teamCount = 2;
+  const countRow = document.getElementById('team-count-row');
+  [2, 3, 4].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (n === teamCount ? 'btn-pink' : 'btn-gray');
+    b.textContent = n + ' 隊';
+    b.onclick = () => { teamCount = n; renderNameList(); [...countRow.children].forEach(c => c.className = 'btn btn-gray'); b.className = 'btn btn-pink'; };
+    countRow.appendChild(b);
+  });
+
+  function renderNameList() {
+    const list = document.getElementById('team-name-list');
+    list.innerHTML = '';
+    for (let i = 0; i < teamCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'team-name-row';
+      row.innerHTML = `<span class="mascot">${MASCOTS[i]}</span><input type="text" id="team-input-${i}" value="第${i+1}隊" maxlength="8">`;
+      list.appendChild(row);
+    }
+  }
+  renderNameList();
+
+  let tierLocal = 'basic';
+  const modeRow = document.getElementById('mode-row');
+  const modeDesc = document.getElementById('mode-desc');
+  const descText = {
+    basic: '走到格子念出上面的注音符號，最適合剛開始認讀',
+    advance: '走到聲符格抽一張韻符卡或結合韻卡拼讀、走到韻符格抽一張聲符卡拼讀',
+    high: '跟進階版一樣，再多抽一張聲調卡，要用指定聲調念出來',
+  };
+  const modeBtns = [
+    { label: '初階版', val: 'basic' },
+    { label: '進階版', val: 'advance' },
+    { label: '高階版', val: 'high' },
+  ];
+  modeBtns.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (m.val === tierLocal ? 'btn-pink' : 'btn-gray');
+    b.textContent = m.label;
+    b.onclick = () => { tierLocal = m.val; [...modeRow.children].forEach(c => c.className = 'btn btn-gray'); b.className = 'btn btn-pink'; modeDesc.textContent = descText[tierLocal]; };
+    modeRow.appendChild(b);
+  });
+  modeDesc.textContent = descText[tierLocal];
+
+  document.getElementById('start-btn').onclick = () => {
+    teams = [];
+    for (let i = 0; i < teamCount; i++) {
+      const input = document.getElementById(`team-input-${i}`);
+      teams.push({ name: (input.value || `第${i+1}隊`).trim() || `第${i+1}隊`, mascot: MASCOTS[i], color: TEAM_COLORS[i], score: 0, pos: 0, skipNext: false });
+    }
+    currentTeamIdx = 0;
+    tier = tierLocal;
+    BOARD = buildBoard();
+    renderBoard();
+  };
+}
+
+/* ---------- 棋盤畫面 ---------- */
+function renderBoard() {
+  app.innerHTML = `<div class="board-wrap"><div class="board-grid" id="board-grid"></div></div>`;
+  layoutBoard();
+  renderScoreBar();
+  updateTurnLabel();
+  document.getElementById('roll-btn').onclick = rollDice;
+  document.getElementById('end-btn').onclick = finishGame;
+  scrollCenterIntoView();
+}
+
+function layoutBoard() {
+  const grid = document.getElementById('board-grid');
+  grid.innerHTML = '';
+  BOARD.forEach((tile, i) => {
+    const { row, col } = boardCellRC(i);
+    const div = document.createElement('div');
+    let cat, inner;
+    if (tile.type === 'start') {
+      cat = 'start'; inner = `<span class="cat-icon">🚩</span><span class="tile-label">起點</span>`;
+    } else if (tile.type === 'parking') {
+      cat = 'parking'; inner = `<span class="cat-icon">🅿️</span><span class="tile-label">停車場</span>`;
+    } else if (tile.type === 'fate') {
+      cat = 'fate'; inner = `<span class="cat-icon">🔮</span><span class="tile-label">命運卡</span>`;
+    } else {
+      cat = tile.category;
+      inner = `<span class="cat-icon">${CAT_ICON[cat]}</span><span class="sym">${vbopo(tile.symbol)}</span>`;
+    }
+    div.className = `tile cat-${cat}`;
+    div.style.gridColumn = col + 1;
+    div.style.gridRow = row + 1;
+    div.id = `tile-${i}`;
+    div.innerHTML = inner + `<div class="tile-pawns" id="pawns-${i}"></div>`;
+    grid.appendChild(div);
+  });
+
+  const center = document.createElement('div');
+  center.className = 'board-center';
+  center.innerHTML = `
+    <div class="center-title">🎲 注音大富翁</div>
+    <div class="tier-badge">難度：${TIER_LABEL[tier]}</div>
+    <div class="score-bar" id="score-bar"></div>
+    <div class="center-turn" id="turn-label"></div>
+    <div class="center-dice-row">
+      <div class="dice-box" id="dice-box">${diePipsHtml(1)}</div>
+      <button class="btn btn-pink" id="roll-btn">擲骰子！</button>
+    </div>
+    <div class="tone-legend">
+      ${TONES.map(t => `<div class="tone-mini"><div class="shape">${t.shape}</div>${t.name}</div>`).join('')}
+    </div>
+    <div class="pile-row">
+      <div class="pile pile-fate">命運卡</div>
+      <div class="pile pile-consonant">聲符卡</div>
+      <div class="pile pile-final">韻符卡</div>
+      <div class="pile pile-combined">結合韻卡</div>
+    </div>
+    <button class="btn btn-gray" id="end-btn" style="margin-top:6px;">🏁 結束遊戲看結果</button>
+  `;
+  grid.appendChild(center);
+
+  renderPawns();
+}
+
+function renderPawns() {
+  BOARD.forEach((_, i) => { const el = document.getElementById(`pawns-${i}`); if (el) el.innerHTML = ''; });
+  teams.forEach(t => {
+    const el = document.getElementById(`pawns-${t.pos}`);
+    if (el) el.insertAdjacentHTML('beforeend', `<span>${t.mascot}</span>`);
+  });
+}
+
+function renderScoreBar() {
+  const bar = document.getElementById('score-bar');
+  if (!bar) return;
+  bar.innerHTML = teams.map((t, i) => `
+    <div class="score-chip ${i === currentTeamIdx ? 'active' : ''}" style="border-color:${i===currentTeamIdx? t.color:'transparent'}">
+      <span class="mascot">${t.mascot}</span>${t.name}：${t.score}分${t.skipNext ? ' 😌休息中' : ''}
+    </div>
+  `).join('');
+}
+
+function updateTurnLabel() {
+  const t = teams[currentTeamIdx];
+  const el = document.getElementById('turn-label');
+  if (el) el.innerHTML = `輪到 <b style="color:${t.color}">${t.mascot}${t.name}</b> 擲骰子！`;
+}
+
+/* ---------- 擲骰子與移動 ---------- */
+function scrollTileIntoView(idx) {
+  const el = document.getElementById(`tile-${idx}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+}
+function scrollCenterIntoView() {
+  const el = document.querySelector('.board-center');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+}
+
+function rollDice() {
+  document.getElementById('roll-btn').disabled = true;
+  scrollCenterIntoView(); // 先確保骰子在畫面上看得到，擲完才捲去跟著棋子走
+  const diceBox = document.getElementById('dice-box');
+  diceBox.classList.add('rolling');
+  let ticks = 0;
+  const spin = setInterval(() => {
+    diceBox.innerHTML = diePipsHtml(Math.floor(Math.random() * 6) + 1);
+    ticks++;
+    if (ticks > 7) {
+      clearInterval(spin);
+      diceBox.classList.remove('rolling');
+      const steps = Math.floor(Math.random() * 6) + 1;
+      diceBox.innerHTML = diePipsHtml(steps);
+      setTimeout(() => movePawn(steps), 700); // 停頓一下讓大家看清楚骰到幾點，再開始走
+    }
+  }, 180);
+}
+
+/* 走格動畫共用：dir 決定前進/後退，一格一格走，走到「通過起點」就直接獲勝結束遊戲（見規則變更：
+   誰先回到起點誰就贏，不再是無限循環的+2分獎勵）。command 卡的移動效果也共用這個函式，讓退格/前進
+   都能像擲骰子一樣看到棋子真的一步步走。 */
+function animateSteps(team, delta, onDone) {
+  const dir = delta > 0 ? 1 : -1;
+  let remaining = Math.abs(delta);
+  const stepInterval = setInterval(() => {
+    if (remaining <= 0) {
+      clearInterval(stepInterval);
+      onDone();
+      return;
+    }
+    const prev = team.pos;
+    team.pos = (team.pos + dir + BOARD_LEN) % BOARD_LEN;
+    remaining--;
+    renderPawns();
+    scrollTileIntoView(team.pos);
+    if (dir > 0 && prev === BOARD_LEN - 1 && team.pos === 0) {
+      clearInterval(stepInterval);
+      winGame(team);
+    }
+  }, 650);
+}
+
+function movePawn(steps) {
+  const team = teams[currentTeamIdx];
+  animateSteps(team, steps, () => onArrive(team));
+}
+
+/* ---------- 落點處理 ---------- */
+
+function pulseTile(idx) {
+  const el = document.getElementById(`tile-${idx}`);
+  if (!el) return;
+  el.classList.remove('tile-landed');
+  void el.offsetWidth; // 重新觸發動畫
+  el.classList.add('tile-landed');
+}
+
+function onArrive(team) {
+  pulseTile(team.pos);
+  setTimeout(() => resolveTile(team), 500);
+}
+
+function resolveTile(team) {
+  const tile = BOARD[team.pos];
+  if (tile.type === 'start') { showRestModal('🚩 回到起點', '🙂'); return; }
+  if (tile.type === 'parking') {
+    team.skipNext = true;
+    showRestModal('🅿️ 停車場', '😌', '要休息一輪，下一次輪到時要跳過，再等一輪才能擲骰子！');
+    return;
+  }
+  if (tile.type === 'fate') { showFateModal(); return; }
+
+  const sym = tile.symbol, cat = tile.category;
+  if (tier === 'basic') { showSoloModal(sym); return; }
+
+  if (cat === 'consonant') {
+    const options = [...(CONSONANT_FINAL_OPTIONS[sym] || []), ...(CONSONANT_COMBINED_OPTIONS[sym] || [])];
+    if (options.length) { showPairModal(sym, pick1(options)); return; }
+    showSoloModal(sym); // 理論上不會發生：21個聲符在 COMBO_SPEECH/COMBO3_SPEECH 裡都至少有一種合法組合
+    return;
+  }
+  // cat === 'single'
+  const consonants = FINAL_CONSONANT_OPTIONS[sym];
+  if (consonants && consonants.length) { showPairModal(pick1(consonants), sym); return; }
+  showSoloModal(sym); // ㄝ/ㄦ/ㄧ 這幾個在資料庫裡找不到合法配對聲符，退回單獨念讀
+}
+
+function closeModal() {
+  const m = document.querySelector('.modal-bg');
+  if (m) m.remove();
+}
+
+function openModal(html) {
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal-box">${html}</div>`;
+  document.body.appendChild(bg);
+}
+
+/* 一聲在注音/拼音標準寫法裡本來就不標調號，所以抽到一聲時畫面刻意不秀聲調卡、也不特別提示——
+   看不到聲調卡就代表念一聲，跟真實注音的慣例一致。但計分仍當作有抽到聲調（+3分），因為念對聲調本身還是比較難。 */
+function toneDisplay(tone) {
+  if (!tone || tone.id === 1) return { html: '', suffix: '' };
+  return {
+    html: `<div class="draw-card tone-card">${tone.shape}<div class="card-label">${tone.name}</div></div>`,
+    suffix: `，然後用「${tone.name}」念一次`,
+  };
+}
+
+function showSoloModal(symbol) {
+  awaitingJudge = true;
+  const tone = tier === 'high' ? drawToneFor(symbol) : null;
+  const points = tier === 'basic' ? 1 : (tone ? 3 : 2);
+  const { html: toneHtml, suffix } = toneDisplay(tone);
+  const prompt = '請念出這個注音' + suffix;
+  openModal(`
+    <h2>${CAT_ICON[getCategory(symbol)]} 認讀</h2>
+    <div class="card-row"><div class="draw-card">${vbopo(symbol)}<div class="card-label">${CAT_LABEL[getCategory(symbol)]}卡</div></div>${toneHtml}</div>
+    <div class="modal-note">${prompt}</div>
+    <div class="judge-row">
+      <button class="btn btn-green" onclick="judgeTile(true, ${points})">✅ 念對了（+${points}分）</button>
+      <button class="btn btn-gray" onclick="judgeTile(false, 0)">🔁 再練習一次</button>
+    </div>
+  `);
+}
+
+function showPairModal(consonant, final) {
+  awaitingJudge = true;
+  const tone = tier === 'high' ? drawToneFor(consonant + final) : null;
+  const points = tone ? 3 : 2;
+  const { html: toneHtml, suffix } = toneDisplay(tone);
+  const prompt = '請把兩張卡拼起來念出來' + suffix;
+  const finalLabel = getCategory(final) === 'combined' ? '結合韻卡' : '韻符卡';
+  openModal(`
+    <h2>🎯 拼音配對</h2>
+    <div class="card-row">
+      <div class="draw-card">${vbopo(consonant)}<div class="card-label">聲符卡</div></div>
+      <div class="draw-card">${vbopo(final)}<div class="card-label">${finalLabel}</div></div>
+      ${toneHtml}
+    </div>
+    <div class="modal-note">${prompt}</div>
+    <div class="judge-row">
+      <button class="btn btn-green" onclick="judgeTile(true, ${points})">✅ 都對了（+${points}分）</button>
+      <button class="btn btn-gray" onclick="judgeTile(false, 0)">🔁 再練習一次</button>
+    </div>
+  `);
+}
+
+let pendingFateCard = null;
+function showFateModal() {
+  const card = pick1(FATE_CARDS);
+  const team = teams[currentTeamIdx];
+  if (card.scoreDelta) {
+    team.score = Math.max(team.score + card.scoreDelta, 0);
+    renderScoreBar();
+  }
+  pendingFateCard = card;
+  openModal(`
+    <h2>🔮 命運卡</h2>
+    <div class="big-symbol">🎴</div>
+    <div class="modal-note">${card.text}</div>
+    <div class="judge-row"><button class="btn btn-pink" onclick="continueFate()">繼續</button></div>
+  `);
+}
+
+/* 命運卡的走格效果（前進/後退）點「繼續」才開始走，讓大家先看清楚抽到的效果文字，
+   再看棋子真的一步步走過去，不要一瞬間就跳到新位置。 */
+function continueFate() {
+  closeModal();
+  const card = pendingFateCard;
+  pendingFateCard = null;
+  const team = teams[currentTeamIdx];
+  if (card && card.steps) {
+    animateSteps(team, card.steps, () => onArrive(team));
+  } else if (card && card.teleportStart) {
+    team.pos = 0;
+    renderPawns();
+    scrollTileIntoView(0);
+    setTimeout(nextTurn, 700);
+  } else {
+    nextTurn();
+  }
+}
+
+function showRestModal(title, icon, note) {
+  openModal(`
+    <h2>${title}</h2>
+    <div class="big-symbol">${icon}</div>
+    <div class="modal-note">${note || '先休息一下，換下一隊！'}</div>
+    <div class="judge-row"><button class="btn btn-pink" onclick="closeModalAndContinue()">繼續</button></div>
+  `);
+}
+
+function closeModalAndContinue() {
+  closeModal();
+  nextTurn();
+}
+
+function judgeTile(correct, points) {
+  if (!awaitingJudge) return;
+  awaitingJudge = false;
+  if (correct) teams[currentTeamIdx].score += points;
+  renderScoreBar();
+  closeModal();
+  nextTurn();
+}
+
+function nextTurn() {
+  currentTeamIdx = (currentTeamIdx + 1) % teams.length;
+  while (teams[currentTeamIdx].skipNext) {
+    teams[currentTeamIdx].skipNext = false;
+    renderScoreBar();
+    currentTeamIdx = (currentTeamIdx + 1) % teams.length;
+  }
+  updateTurnLabel();
+  renderScoreBar();
+  const rollBtn = document.getElementById('roll-btn');
+  if (rollBtn) rollBtn.disabled = false;
+  scrollCenterIntoView();
+}
+
+/* ---------- 結算 ---------- */
+function endGame(headline) {
+  const ranked = [...teams].sort((a, b) => b.score - a.score);
+  const summary = ranked.map(t => `${t.mascot}${t.name} ${t.score}分`).join('、');
+  try {
+    localStorage.setItem('zhuyin_monopoly_last_result', JSON.stringify({ summary, time: Date.now() }));
+  } catch (e) {}
+
+  openModal(`
+    <h2>🏆 遊戲結束！</h2>
+    <div class="modal-note" style="font-size:20px;color:#ff6b9d;font-weight:bold;">${headline}</div>
+    <ul class="rank-list">
+      ${ranked.map((t, i) => `<li><span class="mascot">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'🎖️'}</span><span class="mascot">${t.mascot}</span>${t.name}<span class="score">${t.score} 分</span></li>`).join('')}
+    </ul>
+    <div class="judge-row">
+      <button class="btn btn-pink" onclick="restartGame()">🔄 再玩一次</button>
+    </div>
+  `);
+}
+
+/* 誰先繞一圈回到起點就贏，遊戲立刻結束（不再是無限循環由老師手動結束） */
+function winGame(team) {
+  endGame(`${team.mascot} ${team.name} 第一個回到起點，獲勝！🎉`);
+}
+
+/* 老師隨時可以按「結束遊戲」提早收尾（例如下課時間到了但還沒有人回到起點），改用分數排名 */
+function finishGame() {
+  endGame('老師提早結束遊戲，依目前分數排名：');
+}
+
+function restartGame() {
+  closeModal();
+  renderStart();
+}
+
+renderStart();
+</script>
+</body>
+</html>
