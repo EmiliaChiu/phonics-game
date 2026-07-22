@@ -564,23 +564,31 @@
     width: 100px; height: 120px; border: 4px solid rgba(255,255,255,0.65);
     border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 34px; font-weight: bold; color: white; cursor: pointer;
+    cursor: pointer;
     box-shadow: 0 6px 14px rgba(0,0,0,0.18);
     animation: balloon-rise 7s linear infinite;
+    transition: opacity 0.35s ease, transform 0.35s ease;
   }
+  /* 重要：答對/答錯的視覺回饋一律不能去改 .balloon-btn 本身的 animation 屬性——
+     一旦改了 animation（例如疊加 shake/pop keyframe），會整個蓋掉正在跑的 balloon-rise，
+     導致氣球瞬間跳回 bottom:-150px（畫面外），看起來就像「氣球消失/破掉」，
+     這正是之前「按錯氣球還是會消失」那個 bug 的根因。
+     所以：答錯用內層 .balloon-inner 自己的 animation 做 shake（跟外層的 animation 完全獨立，不互相干擾），
+     答對用外層的 transition（不是 animation）做縮小淡出，兩者都不會動到外層的 balloon-rise。 */
   .balloon-btn::after {
     content: ''; position: absolute; bottom: -18px; left: 50%; width: 2px; height: 18px;
     background: rgba(120,120,120,0.5); transform: translateX(-50%);
   }
   .balloon-btn.disabled { animation-play-state: paused; pointer-events: none; }
+  .balloon-inner { font-size: 34px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
   .balloon-c0 { background: linear-gradient(160deg, #ff6b9d, #ff8fb5); }
   .balloon-c1 { background: linear-gradient(160deg, #FFC857, #FFDA8C); }
   .balloon-c2 { background: linear-gradient(160deg, #A6D9F7, #C7E9FB); }
   .balloon-c3 { background: linear-gradient(160deg, #7ED957, #A3E67F); }
-  .balloon-btn.correct { background: #7ED957; animation: balloon-pop 0.5s forwards; }
-  .balloon-btn.wrong { background: #FF8888; animation: shake 0.4s; }
+  .balloon-btn.correct { background: #7ED957; opacity: 0; transform: scale(0.3); }
+  .balloon-btn.wrong { background: #FF8888; }
+  .balloon-btn.wrong .balloon-inner { animation: shake 0.4s; }
   @keyframes balloon-rise { from { bottom: -150px; } to { bottom: 100%; } }
-  @keyframes balloon-pop { 0% { transform: scale(1); opacity: 1; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.2); opacity: 0; } }
   .vanish-covered {
     background: repeating-linear-gradient(45deg, #ff6b9d 0, #ff6b9d 10px, #FFB6D9 10px, #FFB6D9 20px);
     color: white; font-size: 34px;
@@ -2495,7 +2503,7 @@ function buildQuiz(area, lessonId, focus, pool, numQ) {
       const btn = document.createElement('button');
       btn.className = `balloon-btn ${BALLOON_COLORS[i % BALLOON_COLORS.length]}`;
       btn.dataset.sym = sym;
-      btn.innerHTML = vbopo(sym);
+      btn.innerHTML = `<span class="balloon-inner">${vbopo(sym)}</span>`;
       btn.style.left = lanes[i % lanes.length] + '%';
       btn.style.animationDelay = (i * 1.3) + 's'; // 一顆一顆飛上來，不是同時全部出現
       btn.onclick = () => {
